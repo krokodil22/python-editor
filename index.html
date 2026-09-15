@@ -90,7 +90,7 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  let interfaceStage,interfaceCanvas,guiEvents=[];
+  let interfaceStage,interfaceCanvas,guiEvents=[],activeAudio=[];
   function prepareInterface(){
     guiEvents=[];
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
@@ -181,6 +181,7 @@ class Rect:
  def center(self,value): self.x,self.y=float(value[0])-self.w/2,float(value[1])-self.h/2
  def move(self,x,y): return Rect(self.x+x,self.y+y,self.w,self.h)
  def collidepoint(self,point): return self.x<=point[0]<=self.x+self.w and self.y<=point[1]<=self.y+self.h
+ def colliderect(self,other): return self.x<other.x+other.w and self.x+self.w>other.x and self.y<other.y+other.h and self.y+self.h>other.y
  def __iter__(self): return iter((self.x,self.y,self.w,self.h))
 class Surface:
  def __init__(self,size=(640,400),flags=0,_asset=None): self.size=tuple(size); self._asset=_asset
@@ -192,6 +193,9 @@ class Surface:
  def get_width(self): return self.size[0]
  def get_height(self): return self.size[1]
  def get_size(self): return self.size
+ def copy(self): return Surface(self.size,_asset=self._asset)
+ def convert(self,*args): return self.copy()
+ def convert_alpha(self,*args): return self.copy()
  def get_rect(self,**kw):
   result=Rect(0,0,*self.size)
   for name,value in kw.items(): setattr(result,name,value)
@@ -237,12 +241,114 @@ def _load_image(filename):
  with open(filename,'rb'): pass
  return Surface((0,0),_asset=str(filename))
 def _save_image(surface,filename): raise NotImplementedError('pygame.image.save is not available in the browser')
-pygame.display=_Display(); pygame.draw=_Draw(); pygame.event=_Events(); pygame.time=types.SimpleNamespace(Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
-pygame.font=types.SimpleNamespace(Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
+def _scale_surface(surface,size,dest_surface=None):
+ target=dest_surface or Surface(tuple(map(int,size)),_asset=surface._asset)
+ target.size=tuple(map(int,size)); target._asset=surface._asset; return target
+def _scale_by(surface,factor,dest_surface=None):
+ factors=(factor,factor) if isinstance(factor,(int,float)) else factor
+ return _scale_surface(surface,(surface.get_width()*factors[0],surface.get_height()*factors[1]),dest_surface)
+def _rotate_surface(surface,angle):
+ radians=math.radians(float(angle)); width,height=surface.get_size()
+ size=(math.ceil(abs(width*math.cos(radians))+abs(height*math.sin(radians))-1e-10),math.ceil(abs(width*math.sin(radians))+abs(height*math.cos(radians))-1e-10))
+ return Surface(size,_asset=surface._asset)
+def _flip_surface(surface,flip_x,flip_y): return Surface(surface.get_size(),_asset=surface._asset)
+def _rotozoom_surface(surface,angle,scale): return _scale_by(_rotate_surface(surface,angle),float(scale))
+def _audio_filename(source):
+ if not isinstance(source,(str,bytes)): raise TypeError('Sound source must be a filename')
+ filename=source.decode() if isinstance(source,bytes) else source
+ with open(filename,'rb'): pass
+ return str(filename)
+class Sound:
+ def __init__(self,source): self._filename=_audio_filename(source); self._volume=1.
+ def play(self,loops=0,maxtime=0,fade_ms=0): _event('pygame-sound',name=self._filename,loops=int(loops),volume=self._volume); return Channel(0)
+ def stop(self): _event('pygame-audio-stop',name=self._filename)
+ def fadeout(self,time): self.stop()
+ def set_volume(self,value): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_length(self): return 0.
+class Channel:
+ def __init__(self,index): self.index=int(index); self._volume=1.
+ def play(self,sound,loops=0,maxtime=0,fade_ms=0): return sound.play(loops,maxtime,fade_ms)
+ def stop(self): _event('pygame-audio-stop')
+ def pause(self): _event('pygame-audio-pause')
+ def unpause(self): _event('pygame-audio-unpause')
+ def set_volume(self,value,*right): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_busy(self): return False
+class _Music:
+ def __init__(self): self._filename=None; self._volume=1.
+ def load(self,source): self._filename=_audio_filename(source)
+ def unload(self): self.stop(); self._filename=None
+ def play(self,loops=0,start=0.,fade_ms=0):
+  if self._filename is None: raise RuntimeError('music not loaded')
+  _event('pygame-music',name=self._filename,loops=int(loops),volume=self._volume)
+ def stop(self): _event('pygame-audio-stop',music=True)
+ def pause(self): _event('pygame-audio-pause',music=True)
+ def unpause(self): _event('pygame-audio-unpause',music=True)
+ def fadeout(self,time): self.stop()
+ def set_volume(self,value): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_busy(self): return False
+class Sprite:
+ def __init__(self,*groups): self.__groups=set(); self.add(*groups)
+ def add(self,*groups):
+  for group in groups: group.add(self)
+ def remove(self,*groups):
+  for group in groups: group.remove(self)
+ def kill(self): self.remove(*tuple(self.__groups))
+ def alive(self): return bool(self.__groups)
+ def groups(self): return list(self.__groups)
+ def update(self,*args,**kwargs): pass
+ def _add_internal(self,group): self.__groups.add(group)
+ def _remove_internal(self,group): self.__groups.discard(group)
+class Group:
+ def __init__(self,*sprites): self._sprites=[]; self.add(*sprites)
+ def add(self,*sprites):
+  for item in sprites:
+   if isinstance(item,(list,tuple,set,Group)): self.add(*list(item))
+   elif item not in self._sprites: self._sprites.append(item); item._add_internal(self)
+ def remove(self,*sprites):
+  for item in sprites:
+   if isinstance(item,(list,tuple,set,Group)): self.remove(*list(item))
+   elif item in self._sprites: self._sprites.remove(item); item._remove_internal(self)
+ def sprites(self): return list(self._sprites)
+ def copy(self): return type(self)(*self._sprites)
+ def empty(self): self.remove(*self._sprites)
+ def has(self,*sprites): return all(item in self._sprites for item in sprites)
+ def update(self,*args,**kwargs):
+  for item in self._sprites: item.update(*args,**kwargs)
+ def draw(self,surface): return [surface.blit(item.image,item.rect) for item in self._sprites if hasattr(item,'image') and hasattr(item,'rect')]
+ def __iter__(self): return iter(self._sprites)
+ def __contains__(self,item): return item in self._sprites
+ def __len__(self): return len(self._sprites)
+class GroupSingle(Group):
+ @property
+ def sprite(self): return self._sprites[0] if self._sprites else None
+ @sprite.setter
+ def sprite(self,value): self.empty(); value is not None and self.add(value)
+def spritecollide(sprite,group,dokill,collided=None):
+ test=collided or (lambda left,right:left.rect.colliderect(right.rect))
+ result=[item for item in group if test(sprite,item)]
+ if dokill:
+  for item in result: item.kill()
+ return result
+def collide_rect(left,right): return left.rect.colliderect(right.rect)
+def _pg_module(name,**members):
+ module=types.ModuleType('pygame.'+name); module.__dict__.update(members); setattr(pygame,name,module); sys.modules['pygame.'+name]=module; return module
+_display=_Display(); _draw=_Draw(); _events=_Events()
+pygame.display=_pg_module('display',set_mode=_display.set_mode,set_caption=_display.set_caption,flip=_display.flip,update=_display.update,get_surface=_display.get_surface)
+pygame.draw=_pg_module('draw',rect=_draw.rect,line=_draw.line,lines=_draw.lines,circle=_draw.circle,polygon=_draw.polygon)
+pygame.event=_pg_module('event',get=_events.get,pump=_events.pump,Event=_events.Event)
+pygame.time=_pg_module('time',Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
+pygame.font=_pg_module('font',Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
 pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; pygame.image.save=_save_image
+pygame.sprite=_pg_module('sprite',Sprite=Sprite,Group=Group,GroupSingle=GroupSingle,spritecollide=spritecollide,collide_rect=collide_rect)
+pygame.mixer=_pg_module('mixer',Sound=Sound,Channel=Channel,music=_Music(),init=lambda *a,**kw:None,quit=lambda:None,get_init=lambda:(44100,-16,2),get_busy=lambda:False,stop=lambda:_event('pygame-audio-stop'),pause=lambda:_event('pygame-audio-pause'),unpause=lambda:_event('pygame-audio-unpause'))
+pygame.transform=_pg_module('transform',scale=_scale_surface,smoothscale=_scale_surface,scale_by=_scale_by,smoothscale_by=_scale_by,rotate=_rotate_surface,flip=_flip_surface,rotozoom=_rotozoom_surface)
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
 for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
+pygame.__all__=['display','draw','event','time','font','image','sprite','mixer','transform','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN']
 sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals; sys.modules['pygame.image']=pygame.image
 
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
@@ -295,6 +401,14 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           const asset=assets.find(item=>item.name===filename&&item.type.startsWith('image/'));
           if(asset){const image=new Image();image.onload=()=>{const size=event.size[0]&&event.size[1]?event.size:[image.naturalWidth,image.naturalHeight];context.drawImage(image,event.pos[0],event.pos[1],...size)};image.src=asset.url}
         }
+        if(event.kind==='pygame-sound'||event.kind==='pygame-music'){
+          const filename=event.name.replaceAll('\\','/').split('/').pop();
+          const asset=assets.find(item=>item.name===filename&&item.type.startsWith('audio/'));
+          if(asset){const audio=new Audio(asset.url);audio.volume=event.volume;audio.loop=event.loops<0;activeAudio.push(audio);audio.play().catch(()=>{})}
+        }
+        if(event.kind==='pygame-audio-stop'){activeAudio.forEach(audio=>{audio.pause();audio.currentTime=0});activeAudio=[]}
+        if(event.kind==='pygame-audio-pause')activeAudio.forEach(audio=>audio.pause());
+        if(event.kind==='pygame-audio-unpause')activeAudio.forEach(audio=>audio.play().catch(()=>{}));
         if(event.kind==='turtle-line'){context.moveTo(320+event.x1,200-event.y1);context.lineTo(320+event.x2,200-event.y2);context.stroke()}
         if(event.kind==='turtle-circle'){context.arc(320+event.x,200-event.y-event.r,Math.abs(event.r),0,Math.PI*2);context.stroke()}
         if(event.kind==='line'){context.moveTo(event.points[0],event.points[1]);context.lineTo(event.points[2],event.points[3]);context.stroke()}
@@ -312,6 +426,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     if(!isRunning)return;
     worker?.terminate();worker=undefined;clearTimeout(loadTimer);
     if(pendingInput){pendingInput.input.disabled=true;pendingInput=undefined}
+    activeAudio.forEach(audio=>audio.pause());activeAudio=[];
     writePython(reason,'error');setState('','Остановлено');setRunning(false);
   }
   function createPythonWorker(){
