@@ -181,6 +181,7 @@ class Rect:
  def center(self,value): self.x,self.y=float(value[0])-self.w/2,float(value[1])-self.h/2
  def move(self,x,y): return Rect(self.x+x,self.y+y,self.w,self.h)
  def collidepoint(self,point): return self.x<=point[0]<=self.x+self.w and self.y<=point[1]<=self.y+self.h
+ def colliderect(self,other): return self.x<other.x+other.w and self.x+self.w>other.x and self.y<other.y+other.h and self.y+self.h>other.y
  def __iter__(self): return iter((self.x,self.y,self.w,self.h))
 class Surface:
  def __init__(self,size=(640,400),flags=0,_asset=None): self.size=tuple(size); self._asset=_asset
@@ -237,12 +238,64 @@ def _load_image(filename):
  with open(filename,'rb'): pass
  return Surface((0,0),_asset=str(filename))
 def _save_image(surface,filename): raise NotImplementedError('pygame.image.save is not available in the browser')
-pygame.display=_Display(); pygame.draw=_Draw(); pygame.event=_Events(); pygame.time=types.SimpleNamespace(Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
-pygame.font=types.SimpleNamespace(Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
+class Sprite:
+ def __init__(self,*groups): self.__groups=set(); self.add(*groups)
+ def add(self,*groups):
+  for group in groups: group.add(self)
+ def remove(self,*groups):
+  for group in groups: group.remove(self)
+ def kill(self): self.remove(*tuple(self.__groups))
+ def alive(self): return bool(self.__groups)
+ def groups(self): return list(self.__groups)
+ def update(self,*args,**kwargs): pass
+ def _add_internal(self,group): self.__groups.add(group)
+ def _remove_internal(self,group): self.__groups.discard(group)
+class Group:
+ def __init__(self,*sprites): self._sprites=[]; self.add(*sprites)
+ def add(self,*sprites):
+  for item in sprites:
+   if isinstance(item,(list,tuple,set,Group)): self.add(*list(item))
+   elif item not in self._sprites: self._sprites.append(item); item._add_internal(self)
+ def remove(self,*sprites):
+  for item in sprites:
+   if isinstance(item,(list,tuple,set,Group)): self.remove(*list(item))
+   elif item in self._sprites: self._sprites.remove(item); item._remove_internal(self)
+ def sprites(self): return list(self._sprites)
+ def copy(self): return type(self)(*self._sprites)
+ def empty(self): self.remove(*self._sprites)
+ def has(self,*sprites): return all(item in self._sprites for item in sprites)
+ def update(self,*args,**kwargs):
+  for item in self._sprites: item.update(*args,**kwargs)
+ def draw(self,surface): return [surface.blit(item.image,item.rect) for item in self._sprites if hasattr(item,'image') and hasattr(item,'rect')]
+ def __iter__(self): return iter(self._sprites)
+ def __contains__(self,item): return item in self._sprites
+ def __len__(self): return len(self._sprites)
+class GroupSingle(Group):
+ @property
+ def sprite(self): return self._sprites[0] if self._sprites else None
+ @sprite.setter
+ def sprite(self,value): self.empty(); value is not None and self.add(value)
+def spritecollide(sprite,group,dokill,collided=None):
+ test=collided or (lambda left,right:left.rect.colliderect(right.rect))
+ result=[item for item in group if test(sprite,item)]
+ if dokill:
+  for item in result: item.kill()
+ return result
+def collide_rect(left,right): return left.rect.colliderect(right.rect)
+def _pg_module(name,**members):
+ module=types.ModuleType('pygame.'+name); module.__dict__.update(members); setattr(pygame,name,module); sys.modules['pygame.'+name]=module; return module
+_display=_Display(); _draw=_Draw(); _events=_Events()
+pygame.display=_pg_module('display',set_mode=_display.set_mode,set_caption=_display.set_caption,flip=_display.flip,update=_display.update,get_surface=_display.get_surface)
+pygame.draw=_pg_module('draw',rect=_draw.rect,line=_draw.line,lines=_draw.lines,circle=_draw.circle,polygon=_draw.polygon)
+pygame.event=_pg_module('event',get=_events.get,pump=_events.pump,Event=_events.Event)
+pygame.time=_pg_module('time',Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
+pygame.font=_pg_module('font',Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
 pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; pygame.image.save=_save_image
+pygame.sprite=_pg_module('sprite',Sprite=Sprite,Group=Group,GroupSingle=GroupSingle,spritecollide=spritecollide,collide_rect=collide_rect)
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
 for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
+pygame.__all__=['display','draw','event','time','font','image','sprite','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN']
 sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals; sys.modules['pygame.image']=pygame.image
 
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
