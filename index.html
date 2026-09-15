@@ -281,11 +281,11 @@ class _Event:
  def __init__(self,event_type,**kw): self.type=event_type; self.__dict__.update(kw)
 class _Events:
  def get(self):
-  return [_Event(pygame.QUIT)] if __pystudio_take_quit() else []
+  return [_Event(pygame.QUIT)] if _pystudio_take_quit() else []
  def pump(self): pass
  def Event(self,event_type,**kw): return _Event(event_type,**kw)
 class _PressedKeys:
- def __getitem__(self,key): return bool(__pystudio_key_pressed(int(key)))
+ def __getitem__(self,key): return bool(_pystudio_key_pressed(int(key)))
  def __len__(self): return 512
  def __iter__(self): return iter([False]*len(self))
 def _get_pressed_keys(): return _PressedKeys()
@@ -518,8 +518,8 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           send('status',{label:'Проверка импортов…'});
           await runtime.loadPackagesFromImports(source,{messageCallback:()=>{},errorCallback:()=>{}});
           runtime.globals.set('__pystudio_gui_event',event=>send('gui',{event:JSON.parse(event)}));
-          runtime.globals.set('__pystudio_key_pressed',key=>pressedKeys.has(Number(key)));
-          runtime.globals.set('__pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
+          runtime.globals.set('_pystudio_key_pressed',key=>pressedKeys.has(Number(key)));
+          runtime.globals.set('_pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);
           const prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.tick\\([^\\n]*\\))\\s*$/gm,'$1await $2');
