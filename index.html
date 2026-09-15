@@ -145,6 +145,18 @@ print("Удвоенное значение:", number * 2)`;
       const frame=pygameFrame;pygameFrame=[];paintPygameFrame(frame,++pygameFrameId);
     }else if(!event.kind.startsWith('pygame-audio')&&!['pygame-sound','pygame-music'].includes(event.kind))pygameFrame.push(event);
   }
+  function renderTurtleEvent(event){
+    if(!interfaceCanvas?.isConnected)return;
+    if(event.kind==='turtle-display'){interfaceContext=interfaceCanvas.getContext('2d');revealInterface();return}
+    const context=interfaceContext||interfaceCanvas.getContext('2d');
+    const point=(x,y)=>[interfaceCanvas.width/2+x,interfaceCanvas.height/2-y];
+    context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.fill||event.color||'#111827';context.lineWidth=event.width||2;
+    if(event.kind==='turtle-clear')context.clearRect(0,0,interfaceCanvas.width,interfaceCanvas.height);
+    if(event.kind==='turtle-line'){context.moveTo(...point(event.x1,event.y1));context.lineTo(...point(event.x2,event.y2));context.stroke()}
+    if(event.kind==='turtle-circle'){context.arc(...point(event.x,event.y-event.r),Math.abs(event.r),0,Math.PI*2);context.stroke()}
+    if(event.kind==='turtle-dot'){context.arc(...point(event.x,event.y),Math.abs(event.size)/2,0,Math.PI*2);context.fill()}
+    if(event.kind==='turtle-fill'){event.points.forEach(([x,y],index)=>index?context.lineTo(...point(x,y)):context.moveTo(...point(x,y)));context.closePath();context.fill();context.stroke()}
+  }
   const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
 def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}))
 
@@ -199,38 +211,71 @@ for _name in ('commondialog','constants','dialog','dnd','tix'):
 sys.modules['tkinter']=tk
 
 # turtle records drawing commands for the browser canvas.
-turtle=types.ModuleType('turtle'); _tx=_ty=0.; _angle=0.; _pen=True; _color='black'; _width=2
+turtle=types.ModuleType('turtle'); _tx=_ty=0.; _angle=0.; _pen=True; _color='black'; _fill='black'; _width=2; _filling=False; _fill_points=[]; _click_handler=None
 def forward(n):
  global _tx,_ty
  nx=_tx+float(n)*math.cos(math.radians(_angle)); ny=_ty+float(n)*math.sin(math.radians(_angle))
  if _pen: _event('turtle-line',x1=_tx,y1=_ty,x2=nx,y2=ny,color=_color,width=_width)
  _tx,_ty=nx,ny
+ if _filling: _fill_points.append((_tx,_ty))
 def backward(n): forward(-n)
 def left(n):
  global _angle; _angle+=float(n)
 def right(n):
  global _angle; _angle-=float(n)
 def goto(x,y):
- global _tx,_ty
+ global _tx,_ty,_fill_points
  ox,oy=_tx,_ty; _tx,_ty=float(x),float(y)
  if _pen: _event('turtle-line',x1=ox,y1=oy,x2=_tx,y2=_ty,color=_color,width=_width)
+ if _filling: _fill_points.append((_tx,_ty))
 def penup():
  global _pen; _pen=False
 def pendown():
  global _pen; _pen=True
-def pencolor(value):
- global _color; _color=str(value)
+def pencolor(value=None):
+ global _color
+ if value is None: return _color
+ _color=str(value)
+def fillcolor(value=None):
+ global _fill
+ if value is None: return _fill
+ _fill=str(value)
+def color(*values):
+ if not values: return (_color,_fill)
+ pencolor(values[0]); fillcolor(values[-1])
 def pensize(value):
  global _width; _width=float(value)
 def circle(radius): _event('turtle-circle',x=_tx,y=_ty,r=float(radius),color=_color,width=_width)
-def done(): pass
-def mainloop(): pass
+def dot(size=None,*colors): _event('turtle-dot',x=_tx,y=_ty,size=float(size or max(_width+4,_width*2)),color=str(colors[0] if colors else _color))
+def begin_fill():
+ global _filling,_fill_points; _filling=True; _fill_points=[(_tx,_ty)]
+def end_fill():
+ global _filling
+ if _filling and len(_fill_points)>2: _event('turtle-fill',points=_fill_points,color=_color,fill=_fill,width=_width)
+ _filling=False
+def clear(): _event('turtle-clear')
+def hideturtle(): pass
+def speed(value=None): return 0
+class _Screen:
+ def __init__(self): _event('turtle-display')
+ def title(self,value): _event('title',value=str(value))
+ def onclick(self,fun,btn=1,add=None):
+  global _click_handler; _click_handler=fun
+ async def mainloop(self):
+  while True:
+   click=_pystudio_turtle_take_click()
+   if click is not None and _click_handler is not None: _click_handler(click[0],click[1])
+   await asyncio.sleep(.02)
+ def bye(self): pass
+Screen=_Screen
+async def mainloop(): await _Screen().mainloop()
+done=mainloop
 class Turtle:
  forward=staticmethod(forward); fd=staticmethod(forward); backward=staticmethod(backward); bk=staticmethod(backward)
  left=staticmethod(left); lt=staticmethod(left); right=staticmethod(right); rt=staticmethod(right); goto=staticmethod(goto)
  penup=staticmethod(penup); up=staticmethod(penup); pendown=staticmethod(pendown); down=staticmethod(pendown)
- pencolor=staticmethod(pencolor); color=staticmethod(pencolor); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle)
-for _n in ('forward','backward','left','right','goto','penup','pendown','pencolor','pensize','circle','done','mainloop'): setattr(turtle,_n,globals()[_n])
+ pencolor=staticmethod(pencolor); fillcolor=staticmethod(fillcolor); color=staticmethod(color); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle); dot=staticmethod(dot)
+for _n in ('forward','backward','left','right','goto','penup','pendown','pencolor','fillcolor','color','pensize','circle','dot','begin_fill','end_fill','clear','hideturtle','speed','done','mainloop','Screen'): setattr(turtle,_n,globals()[_n])
 turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.up=penup; turtle.down=pendown; turtle.Turtle=Turtle
 sys.modules['turtle']=turtle
 
@@ -560,7 +605,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     const workerCode=`
       const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
       const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
-      let runtime,inputId=0,inputResolvers=new Map(),stdoutBuffer='',quitRequested=false;
+      let runtime,inputId=0,inputResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[];
       const pressedKeys=new Set();
       const decoder=new TextDecoder();
       function send(type,data={}){postMessage({type,...data})}
@@ -597,13 +642,15 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           runtime.globals.set('__pystudio_gui_event',event=>send('gui',{event:JSON.parse(event)}));
           runtime.globals.set('_pystudio_key_pressed',key=>pressedKeys.has(Number(key)));
           runtime.globals.set('_pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
+          runtime.globals.set('_pystudio_turtle_take_click',()=>turtleClicks.shift()||null);
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);
-          const prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          let prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           await runtime.runPythonAsync(prepared,{filename:'main.py'});flush();send('done');
         }catch(error){flush();send('error',{message:String(error?.message||error)})}
       }
-      onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true};`;
+      onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true;if(m.type==='turtle-click')turtleClicks.push([Number(m.x),Number(m.y)])};`;
     const url=URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'}));
     const instance=new Worker(url);URL.revokeObjectURL(url);return instance;
   }
@@ -628,6 +675,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
       }
       if(message.type==='gui'){
         if(message.event.kind.startsWith('pygame-'))renderPygameEvent(message.event);
+        else if(message.event.kind.startsWith('turtle-'))renderTurtleEvent(message.event);
         else guiEvents.push(message.event);
       }
       if(message.type==='input'){
@@ -654,6 +702,11 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     event.preventDefault();worker?.postMessage({type:'key',key:pygameKey,down});
   }
   runButton.onclick=run;
+  out.addEventListener('click',event=>{
+    if(!isRunning||event.target!==interfaceCanvas)return;
+    const rect=interfaceCanvas.getBoundingClientRect(),scaleX=interfaceCanvas.width/rect.width,scaleY=interfaceCanvas.height/rect.height;
+    worker?.postMessage({type:'turtle-click',x:(event.clientX-rect.left)*scaleX-interfaceCanvas.width/2,y:interfaceCanvas.height/2-(event.clientY-rect.top)*scaleY});
+  });
   document.addEventListener('keydown',event=>{if(event.key==='Escape')stop();else sendPygameKey(event,true)});
   document.addEventListener('keyup',event=>sendPygameKey(event,false));
   window.addEventListener('blur',()=>{if(isRunning)Object.values(pygameKeys).forEach(key=>worker?.postMessage({type:'key',key,down:false}))});
