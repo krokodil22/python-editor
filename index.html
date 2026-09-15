@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="ru" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Веб-разработка</title>
+    <link rel="icon" href="logo.webp" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+    <meta name="color-scheme" content="dark light" />
+    <style>
+      html,body{height:100%;margin:0}
+      body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}
+      .dark body{background:#0f172a;color:#f1f5f9}
+      .app{min-height:100vh;padding:16px}
+      .container{max-width:1400px;margin:0 auto}
+      .header{border-radius:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}
+      .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+      button,select,input[type="file"]{font:inherit}
+      button,select{border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}
+      button:hover,select:hover{filter:brightness(.97)}
+      #runBtn,#exportBtn{color:#fff;border:0}
+      #runBtn{background:#4f46e5} #exportBtn{background:#059669}
+      .hidden{display:none}
+      .panel{margin-top:16px;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden}
+      .panelHead{padding:8px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+      .panelBody{padding:12px}
+      .tabs{display:flex;gap:6px;margin-bottom:8px}
+      .tab-btn{background:#eef2ff;border:1px solid transparent}
+      .tab-btn.active{border-color:#4f46e5;background:#eef2ff}
+      .device-wrapper{position:relative;overflow:hidden}
+      .device-badge{position:absolute;top:6px;right:8px;font-size:10px;opacity:.7;z-index:1;pointer-events:none}
+      .device-viewport{transform-origin:top left;background:#fff;overflow:hidden}
+      #preview{width:100%;height:100%;border:0}
+      .CodeMirror,.simple-editor{height:60vh;border:1px solid #cbd5e1;border-radius:8px}
+      @media (min-width:1024px){.CodeMirror,.simple-editor{height:70vh}}
+      .simple-editor{width:100%;box-sizing:border-box;padding:10px;font-family:ui-monospace,Consolas,monospace;font-size:16px;resize:vertical;white-space:pre}
+      .hidden-el{display:none}
+      .range{accent-color:#4f46e5}
+      .transition-theme{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+      .dropzone{border:2px dashed rgba(148,163,184,.7); border-radius:12px; padding:20px; text-align:center}
+      .dropzone.drag{background:rgba(99,102,241,.08); border-color:#6366f1}
+      .chip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:10px;border:1px solid rgba(148,163,184,.5);background:rgba(241,245,249,.6)}
+      .chip .rm{border:none;border-radius:8px;padding:4px 6px;cursor:pointer}
+      .chip .rm:hover{background:#fee2e2}
+      .dark .header,.dark .panel{background:rgba(30,41,59,.8);border-color:#334155}
+      .dark button,.dark select{background:#334155;color:#f1f5f9;border-color:#475569}
+      .dark .tab-btn{background:#1e293b;border-color:transparent}
+      .dark .tab-btn.active{background:#312e81;border-color:#6366f1}
+      .dark #runBtn{background:#6366f1}.dark #exportBtn{background:#10b981}
+      .dark .chip{background:rgba(15,23,42,.6);border-color:#334155}
+      .dark .chip .rm:hover{background:#7f1d1d;color:#fff}
+      #consoleOut{max-height:30vh;overflow:auto;font-family:ui-monospace,Consolas,monospace;font-size:12px;padding:12px;background:#fff;color:#0f172a}
+      .dark #consoleOut{background:#0b1220;color:#e2e8f0;border-top:1px solid #334155}
+      .workbench{display:grid;grid-template-columns:1fr;gap:16px}
+      .editor-panel,.preview-panel{margin-top:0}
+      .preview-panel #previewArea{height:100%}
+      .h-8{height:32px}.w-auto{width:auto}.select-none{user-select:none}
+      .flex{display:flex}.items-center{align-items:center}.gap-2{gap:8px}.gap-3{gap:12px}
+      .text-xs{font-size:12px}.px-2{padding-left:8px;padding-right:8px}.py-1{padding-top:4px;padding-bottom:4px}.rounded{border-radius:8px}
+      .opacity-50{opacity:.5}.opacity-60{opacity:.6}.opacity-80{opacity:.8}
+      .truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mr-1{margin-right:4px}.underline{text-decoration:underline}
+      .text-red-600{color:#dc2626}.text-yellow-700{color:#a16207}.text-sky-700{color:#0369a1}.text-slate-700{color:#334155}
+      .dark .text-red-400{color:#f87171}.dark .text-yellow-300{color:#fde047}.dark .text-sky-300{color:#7dd3fc}.dark .text-slate-200{color:#e2e8f0}
+      @media (min-width:1024px){
+        .workbench{grid-template-columns:1fr 1fr}
+      }
+    </style>
+  </head>
+  <body class="h-full transition-theme bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div class="app">
+      <div class="container">
+        <header class="header transition-theme">
+          <div class="flex items-center gap-3">
+            <img src="./logo.webp" alt="Logo" class="h-8 w-auto select-none" />
+          </div>
+          <div class="toolbar">
+            <button id="themeToggle" class="transition-theme">🌞 Светлая</button>
+            <select id="deviceProfile" class="transition-theme">
+              <option value="desk1440x900">Десктоп 1440×900 (16:10)</option>
+              <option value="tab768x1024">Планшет 1024×768 (4:3)</option>
+              <option value="mob375x812">Мобильный 375×812 (iPhone X)</option>
+            </select>
+            <button id="runBtn" style="color:white;" class="transition">▶ Запуск</button>
+            <button id="exportBtn" style="color:white;" class="transition">⤓ Экспорт</button>
+            <button id="importBtn" class="transition-theme">⤒ Импорт</button>
+            <input id="fileInput" type="file" accept="application/json" class="hidden" />
+            <button id="assetsBtn" class="transition-theme">📁 Файлы</button>
+            <input id="assetsInput" type="file" multiple class="hidden" />
+          </div>
+        </header>
+
+        <div id="assetsBar" class="hidden transition-theme panelBody" style="border-radius:16px;background:#fff;border:1px solid #e2e8f0;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+            <div style="font-size:14px;opacity:.8"><b>Локальные файлы</b><br><span style="font-size:12px">Добавьте файлы и используйте ссылки вида <code>assets/имя_файла</code></span></div>
+            <button id="assetsAddBtn" class="transition-theme">Добавить файлы</button>
+          </div>
+          <div id="dropzone" class="dropzone" style="margin-top:10px">Перетащите файлы сюда или нажмите «Добавить файлы»</div>
+          <div id="assetsList" style="margin-top:10px;display:grid;gap:8px"></div>
+        </div>
+
+        <div class="workbench">
+          <section class="panel transition-theme editor-panel">
+            <div class="panelHead transition-theme">
+              <div class="tabs">
+                <button class="tab-btn" data-tab="html">HTML</button>
+                <button class="tab-btn" data-tab="css">CSS</button>
+                <button class="tab-btn" data-tab="js">JS</button>
+              </div>
+              <label style="font-size:14px">Кегль <input id="fontSizeRange" class="range" type="range" min="12" max="22" step="1" value="16" /> <span id="fontSizeValue">16px</span></label>
+            </div>
+            <div class="panelBody">
+              <div id="htmlHost"></div>
+              <div id="cssHost" class="hidden-el"></div>
+              <div id="jsHost" class="hidden-el"></div>
+            </div>
+          </section>
+
+          <section class="panel transition-theme preview-panel">
+            <div class="panelHead transition-theme"><span id="sizeBadge" class="opacity-80">Предпросмотр iframe sandbox</span></div>
+            <div id="previewArea" class="panelBody device-wrapper" style="padding:0;overflow:hidden">
+              <div id="scaleBadge" class="device-badge">scale 100%</div>
+              <div id="viewport" class="device-viewport">
+                <iframe id="preview" sandbox="allow-scripts allow-forms allow-modals allow-same-origin" referrerpolicy="no-referrer"></iframe>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <section class="transition-theme panel">
+          <div class="transition-theme panelHead">
+            <span class="opacity-80">Консоль</span>
+            <div class="flex items-center gap-2">
+              <button id="clearConsole" class="text-xs px-2 py-1 rounded">Очистить</button>
+            </div>
+          </div>
+          <div id="consoleOut">
+            <div class="opacity-50">Вывод появится после запуска (или из кода через console.log).</div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      (function(){
+        const LS={html:'play_html',css:'play_css',js:'play_js',theme:'theme',fontSize:'editor_fontsize',profile:'device_profile'};
+        const DEFAULTS={html:'',css:'',js:''};
+
+        let cmHtml,cmCss,cmJs;
+
+        function createSimpleEditor(host,value){
+          const ta=document.createElement('textarea');
+          ta.className='simple-editor';
+          ta.value=value||'';
+          host.innerHTML='';
+          host.appendChild(ta);
+          const listeners={change:[]};
+          ta.addEventListener('input',()=>listeners.change.forEach(fn=>fn(api)));
+          const api={
+            getValue:()=>ta.value,
+            setValue:(v)=>{ta.value=v??'';},
+            on:(event,cb)=>{if(listeners[event]) listeners[event].push(cb);},
+            refresh:()=>{},
+            setOption:(name,val)=>{if(name==='theme'){ ta.dataset.theme=val; }}
+          };
+          return api;
+        }
+
+        function applyTheme(t){
+          const on=t==='dark';
+          document.documentElement.classList.toggle('dark',on);
+          document.body.classList.toggle('dark',on);
+          localStorage.setItem(LS.theme,t);
+          const btn=document.getElementById('themeToggle'); if(btn) btn.textContent=on?'🌙 Тёмная':'🌞 Светлая';
+          const cmTheme=on?'material-darker':'default';
+          [cmHtml,cmCss,cmJs].forEach(cm=>cm&&cm.setOption('theme',cmTheme));
+        }
+        function initialTheme(){
+          const saved=localStorage.getItem(LS.theme);
+          if(saved==='light'||saved==='dark') return saved;
+          return (window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';
+        }
+
+        function setEditorFontSize(px){
+          document.getElementById('fontSizeValue').textContent=px+'px';
+          document.querySelectorAll('.CodeMirror,.simple-editor').forEach(el=>el.style.fontSize=px+'px');
+          [cmHtml,cmCss,cmJs].forEach(cm=>cm&&cm.refresh());
+        }
+        function initEditors(){
+          const h=localStorage.getItem(LS.html);
+          const c=localStorage.getItem(LS.css);
+          const j=localStorage.getItem(LS.js);
+          const theme=initialTheme()==='dark'?'material-darker':'default';
+          if(window.CodeMirror){
+            cmHtml=CodeMirror(document.getElementById('htmlHost'),{value:h??DEFAULTS.html,mode:'htmlmixed',theme,lineNumbers:true});
+            cmCss =CodeMirror(document.getElementById('cssHost'), {value:c??DEFAULTS.css,mode:'css',theme,lineNumbers:true});
+            cmJs  =CodeMirror(document.getElementById('jsHost'),  {value:j??DEFAULTS.js,mode:'javascript',theme,lineNumbers:true});
+          }else{
+            cmHtml=createSimpleEditor(document.getElementById('htmlHost'),h??DEFAULTS.html);
+            cmCss=createSimpleEditor(document.getElementById('cssHost'),c??DEFAULTS.css);
+            cmJs=createSimpleEditor(document.getElementById('jsHost'),j??DEFAULTS.js);
+          }
+          cmHtml.on('change',cm=>localStorage.setItem(LS.html,cm.getValue()));
+          cmCss.on('change', cm=>localStorage.setItem(LS.css, cm.getValue()));
+          cmJs.on('change',  cm=>localStorage.setItem(LS.js,  cm.getValue()));
+          const fs=parseInt(localStorage.getItem(LS.fontSize)||'16',10);
+          document.getElementById('fontSizeRange').value=fs;
+          setEditorFontSize(fs);
+        }
+
+        const PROFILES={desk1440x900:{w:1440,h:900,label:'Десктоп 1440×900 (16:10)'},tab768x1024:{w:1024,h:768,label:'Планшет 1024×768 (4:3)'},mob375x812:{w:375,h:812,label:'Мобильный 375×812 (iPhone X)'}};
+        let currentProfile=localStorage.getItem(LS.profile)||'desk1440x900';
+        function getDims(){return PROFILES[currentProfile]||PROFILES.desk1440x900;}
+        function label(){return (PROFILES[currentProfile]||PROFILES.desk1440x900).label;}
+
+        // Assets
+        const assets=new Map(); // name -> {blobUrl,dataUrl}
+        function fileToDataUrl(file){
+          return new Promise((resolve,reject)=>{
+            const reader=new FileReader();
+            reader.onload=()=>resolve(reader.result);
+            reader.onerror=()=>reject(reader.error||new Error('Не удалось прочитать файл'));
+            reader.readAsDataURL(file);
+          });
+        }
+        async function addAssets(files){
+          const list=document.getElementById('assetsList');
+          for(const f of Array.from(files)){
+            const old=assets.get(f.name);
+            if(old&&old.blobUrl){ URL.revokeObjectURL(old.blobUrl); }
+            const blobUrl=URL.createObjectURL(f);
+            const dataUrl=await fileToDataUrl(f);
+            assets.set(f.name,{blobUrl,dataUrl});
+            const row=document.createElement('div');
+            row.className='chip';
+            row.innerHTML='<div class="truncate"><b class="mr-1">'+f.name+'</b><span class="opacity-60">('+Math.ceil(f.size/1024)+' KB)</span><div class="text-xs opacity-80">assets/'+f.name+'</div></div><div class="flex items-center gap-2"><a class="text-xs underline" href="'+blobUrl+'" target="_blank">просмотр</a><button class="rm" title="Удалить" aria-label="Удалить">✕</button></div>';
+            // remove handler
+            row.querySelector('.rm').addEventListener('click',function(){
+              try{
+                const asset=assets.get(f.name);
+                if(asset&&asset.blobUrl){ URL.revokeObjectURL(asset.blobUrl); }
+                assets.delete(f.name);
+                row.remove();
+                // Перезапустить предпросмотр, чтобы карта ресурсов обновилась
+                run();
+              }catch(e){ console.error(e); }
+            });
+            list.appendChild(row);
+          }
+          // после добавления — перезапустить, чтобы подхватить новые ссылки
+          run();
+        }
+        function toggleAssetsBar(){
+          const bar=document.getElementById('assetsBar');
+          bar.classList.toggle('hidden');
+          if(!bar.classList.contains('hidden') && assets.size===0){
+            document.getElementById('assetsInput').click();
+          }
+        }
+        function replaceAssetUrls(str){
+          if(!str||assets.size===0) return str;
+          assets.forEach((asset,name)=>{
+            const url=asset.dataUrl;
+            const esc=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+            const rx1=new RegExp('url\\((["\\\']?)(?:\\.?\\/)?assets/'+esc+'\\1\\)','g');
+            const rx2=new RegExp('(["\\\'])(?:\\.?\\/)?assets/'+esc+'\\1','g');
+            str=str.replace(rx1, 'url($1'+url+'$1)')
+                   .replace(rx2, '$1'+url+'$1');
+          });
+          return str;
+        }
+        function assetUrlByPath(path){
+          if(!path) return null;
+          const normalized=path.split('?')[0].split('#')[0].replace(/^\.\//,'').replace(/^\//,'');
+          if(!normalized.startsWith('assets/')) return null;
+          const asset=assets.get(normalized.slice('assets/'.length));
+          return asset?asset.dataUrl:null;
+        }
+        function replaceAssetUrlsInHtml(html){
+          if(!html||assets.size===0) return html;
+          const doc=new DOMParser().parseFromString('<!doctype html><html><body>'+html+'</body></html>','text/html');
+          doc.querySelectorAll('*').forEach(el=>{
+            ['src','href','poster'].forEach(attr=>{
+              const val=el.getAttribute(attr);
+              const assetUrl=assetUrlByPath(val);
+              if(assetUrl) el.setAttribute(attr,assetUrl);
+            });
+            const srcset=el.getAttribute('srcset');
+            if(srcset){
+              const next=srcset.split(',').map(part=>{
+                const t=part.trim();
+                if(!t) return t;
+                const chunks=t.split(/\s+/);
+                const assetUrl=assetUrlByPath(chunks[0]);
+                if(assetUrl) chunks[0]=assetUrl;
+                return chunks.join(' ');
+              }).join(', ');
+              el.setAttribute('srcset',next);
+            }
+          });
+          return doc.body.innerHTML;
+        }
+        function runtimeMapperScript(){
+          var mapObj={}; assets.forEach(function(v,k){ mapObj[k]=v.dataUrl; });
+          var json=JSON.stringify(mapObj);
+          var s="(function(){";
+          s+="var MAP="+json+";";
+          s+="function res(u){try{if(!u)return u;var clean=u.split('?')[0].split('#')[0];if(clean.indexOf('./')===0)clean=clean.slice(2);if(clean.indexOf('/')===0)clean=clean.slice(1);if(clean.indexOf('assets/')===0){var k=clean.slice(7);if(MAP[k])return MAP[k]}return u}catch(e){return u}}";
+          s+="function patch(root){var sels=['img','script','link','video','audio','source','iframe'];for(var i=0;i<sels.length;i++){var sel=sels[i];var nodes=root.querySelectorAll(sel);for(var j=0;j<nodes.length;j++){var el=nodes[j];var attr=(sel==='link')?'href':'src';if(el.hasAttribute(attr)){var val=el.getAttribute(attr);var r=res(val);if(r!==val)el.setAttribute(attr,r);}}}}";
+          s+="document.addEventListener('DOMContentLoaded',function(){patch(document);var mo=new MutationObserver(function(ms){for(var i=0;i<ms.length;i++){var m=ms[i];if(m.addedNodes){for(var k=0;k<m.addedNodes.length;k++){var n=m.addedNodes[k];if(n.querySelectorAll)patch(n);}}}});mo.observe(document.documentElement,{childList:true,subtree:true});});";
+          s+="var _f=window.fetch.bind(window);window.fetch=function(input,init){if(typeof input==='string'){input=res(input);}else if(input&&input.url){input=new Request(res(input.url),input);}return _f(input,init)};";
+          s+="var _o=XMLHttpRequest.prototype.open;XMLHttpRequest.prototype.open=function(m,u){return _o.call(this,m,res(u),arguments[2],arguments[3],arguments[4])};";
+          s+="})();";
+          return s;
+        }
+
+        function hookDropzone(){
+          const dz=document.getElementById('dropzone');
+          ['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.add('drag');}));
+          ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();dz.classList.remove('drag');}));
+          dz.addEventListener('drop',e=>{ if(e.dataTransfer && e.dataTransfer.files){ addAssets(e.dataTransfer.files); } });
+        }
+
+        // Preview
+        function updateViewportScale(){
+          const area=document.getElementById('previewArea');
+          const dims=getDims();
+          const viewport=document.getElementById('viewport');
+          viewport.style.width=dims.w+'px';
+          viewport.style.height=dims.h+'px';
+          const availW=area.clientWidth;
+          const scale=Math.max(0.1, Math.min(1, availW/dims.w));
+          viewport.style.transform='scale('+scale+')';
+          area.style.height=Math.ceil(dims.h*scale)+'px';
+          area.style.minHeight='unset';
+          document.getElementById('scaleBadge').textContent=dims.w+'×'+dims.h+' @'+Math.round(scale*100)+'%';
+          document.getElementById('sizeBadge').textContent='Предпросмотр • '+label();
+        }
+
+        function buildSrcDoc(){
+          const html=replaceAssetUrlsInHtml(cmHtml.getValue());
+          const css=replaceAssetUrls(cmCss.getValue());
+          const js=replaceAssetUrls(cmJs.getValue());
+          const sandboxBridge='('+function(){
+            (function(){
+              function p(type,args){ parent.postMessage({__sandboxLog:true,type:type,payload:[].slice.call(args).map(function(x){ try{return (typeof x==='object')?JSON.stringify(x):String(x);}catch(e){return String(x);} })},'*'); }
+              ['log','info','warn','error'].forEach(function(k){ var old=console[k]; console[k]=function(){ p(k,arguments); old&&old.apply(console,arguments);} });
+              window.addEventListener('error',function(e){ p('error',[e.message]); });
+              window.addEventListener('unhandledrejection',function(e){ p('error',['UnhandledPromise', (e.reason&&e.reason.message)||String(e.reason)]); });
+            })();
+          }+')();';
+
+          return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+css+'</style></head><body>'+html+
+                 '<script>'+sandboxBridge+'<\/script>'+
+                 '<script>'+runtimeMapperScript()+'<\/script>'+
+                 '<script>'+js+'<\/script></body></html>';
+        }
+
+        function run(){
+          document.getElementById('preview').srcdoc=buildSrcDoc();
+        }
+
+        // Console
+        function log(level,text){
+          const out=document.getElementById('consoleOut');
+          const div=document.createElement('div');
+          div.className=level==='error'?'text-red-600 dark:text-red-400':level==='warn'?'text-yellow-700 dark:text-yellow-300':level==='info'?'text-sky-700 dark:text-sky-300':'text-slate-700 dark:text-slate-200';
+          div.innerHTML='<span class="opacity-60">['+level+']</span> '+text;
+          out.appendChild(div); out.scrollTop=out.scrollHeight;
+        }
+        function clearLogs(){document.getElementById('consoleOut').innerHTML='';}
+        window.addEventListener('message',function(e){var d=e.data;if(!d||!d.__sandboxLog) return; log(d.type,(d.payload||[]).join(' '));});
+
+        document.addEventListener('DOMContentLoaded',function(){
+          initEditors();
+          applyTheme(initialTheme());
+          switchTab('html');
+          run();
+
+          document.getElementById('preview').addEventListener('load', updateViewportScale);
+
+          document.getElementById('themeToggle').addEventListener('click',function(){
+            const isDark=document.documentElement.classList.contains('dark')||document.body.classList.contains('dark');
+            applyTheme(isDark?'light':'dark');
+          });
+          document.querySelectorAll('.tab-btn').forEach(function(b){ b.addEventListener('click', function(){ switchTab(b.getAttribute('data-tab')); }); });
+          document.getElementById('runBtn').addEventListener('click', run);
+          document.getElementById('exportBtn').addEventListener('click', exportProject);
+          document.getElementById('importBtn').addEventListener('click', function(){ document.getElementById('fileInput').click(); });
+          document.getElementById('fileInput').addEventListener('change', function(e){ var f=e.target.files&&e.target.files[0]; e.target.value=''; if(f) importProject(f).catch(function(err){ alert('Импорт не удался: '+(err.message||err)); }); });
+          document.getElementById('clearConsole').addEventListener('click', clearLogs);
+          document.getElementById('fontSizeRange').addEventListener('input', function(e){ var px=parseInt(e.target.value,10); localStorage.setItem(LS.fontSize,px); setEditorFontSize(px); });
+
+          document.getElementById('deviceProfile').value=currentProfile;
+          document.getElementById('deviceProfile').addEventListener('change', function(e){
+            currentProfile=e.target.value; localStorage.setItem(LS.profile,currentProfile); updateViewportScale();
+          });
+
+          // Assets UI
+          document.getElementById('assetsBtn').addEventListener('click', toggleAssetsBar);
+          document.getElementById('assetsAddBtn').addEventListener('click', function(){ document.getElementById('assetsInput').click(); });
+          document.getElementById('assetsInput').addEventListener('change', function(e){ var fs=e.target.files; if(fs&&fs.length){ addAssets(fs); e.target.value=''; } });
+          hookDropzone();
+
+          if(window.ResizeObserver){
+            const ro=new ResizeObserver(updateViewportScale);
+            ro.observe(document.getElementById('previewArea'));
+          }
+          window.addEventListener('resize', updateViewportScale);
+          updateViewportScale();
+
+          window.addEventListener('keydown', function(e){ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='enter'){ e.preventDefault(); run(); } });
+        });
+
+        function setActiveTabButton(tab){
+          document.querySelectorAll('.tab-btn').forEach(function(btn){
+            var a=btn.getAttribute('data-tab')===tab;
+            btn.classList.toggle('active',a);
+          });
+        }
+        function switchTab(tab){
+          setActiveTabButton(tab);
+          ['html','css','js'].forEach(function(name){
+            var el=document.getElementById(name+'Host');
+            if(name===tab) el.classList.remove('hidden-el'); else el.classList.add('hidden-el');
+          });
+          setTimeout(function(){ if(tab==='html') cmHtml.refresh(); if(tab==='css') cmCss.refresh(); if(tab==='js') cmJs.refresh(); },0);
+        }
+
+        function exportProject(){
+          var payload={version:1,html:cmHtml.getValue(),css:cmCss.getValue(),js:cmJs.getValue(),exportedAt:new Date().toISOString()};
+          var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+          var url=URL.createObjectURL(blob);
+          var a=document.createElement('a'); a.href=url; a.download='playground-project-'+Date.now()+'.json'; a.click();
+          URL.revokeObjectURL(url);
+        }
+        async function importProject(file){
+          const text=await file.text(); const data=JSON.parse(text);
+          if(!data || typeof data.html!=='string' || typeof data.css!=='string' || typeof data.js!=='string') throw new Error('Неверный формат файла');
+          cmHtml.setValue(data.html); cmCss.setValue(data.css); cmJs.setValue(data.js);
+          run();
+        }
+      })();
+    </script>
+  </body>
+</html>
