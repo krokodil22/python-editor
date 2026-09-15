@@ -55,6 +55,7 @@ print("Удвоенное значение:", number * 2)`;
       if(previous===-1)assets.push(asset);
       else{URL.revokeObjectURL(assets[previous].url);assets[previous]=asset}
       assetImageCache.delete(file.name);
+      if(file.type.startsWith('image/')){const image=new Image();image.src=asset.url;assetImageCache.set(file.name,image)}
     });
     renderAssets();event.target.value='';
   });
@@ -91,7 +92,7 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  let interfaceStage,interfaceCanvas,interfaceContext,guiEvents=[],activeAudio=[];
+  let interfaceStage,interfaceCanvas,interfaceContext,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
   function prepareInterface(){
     guiEvents=[];
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
@@ -102,28 +103,35 @@ print("Удвоенное значение:", number * 2)`;
     Array.from(out.children).forEach(child=>{if(child!==interfaceStage)child.remove()});
     out.classList.add('interface');interfaceStage.hidden=false;
   }
+  function paintPygameFrame(frame,frameId){
+    if(!interfaceCanvas?.isConnected)return;
+    const buffer=document.createElement('canvas');buffer.width=interfaceCanvas.width;buffer.height=interfaceCanvas.height;
+    const context=buffer.getContext('2d');let waitingForImage=false;
+    frame.forEach(event=>{
+      context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.color||'#111827';context.lineWidth=event.width||2;
+      if(event.kind==='pygame-fill'){if(event.rect)context.fillRect(...event.rect);else context.fillRect(0,0,buffer.width,buffer.height)}
+      if(event.kind==='pygame-rect'){event.width?context.strokeRect(...event.rect):context.fillRect(...event.rect)}
+      if(event.kind==='pygame-line'){context.moveTo(...event.start);context.lineTo(...event.end);context.stroke()}
+      if(event.kind==='pygame-lines'||event.kind==='pygame-polygon'){event.points.forEach((point,index)=>index?context.lineTo(...point):context.moveTo(...point));if(event.closed||event.kind==='pygame-polygon')context.closePath();event.width?context.stroke():context.fill()}
+      if(event.kind==='pygame-circle'){context.arc(event.center[0],event.center[1],Math.abs(event.radius),0,Math.PI*2);event.width?context.stroke():context.fill()}
+      if(event.kind==='pygame-text'){context.font=event.size+'px Arial';context.textBaseline='top';context.fillText(event.text,event.pos[0],event.pos[1])}
+      if(event.kind==='pygame-image'){
+        const filename=event.name.replaceAll('\\','/').split('/').pop();
+        const asset=assets.find(item=>item.name===filename&&item.type.startsWith('image/'));
+        if(asset){
+          let image=assetImageCache.get(filename);
+          if(!image){image=new Image();image.src=asset.url;assetImageCache.set(filename,image)}
+          if(image.complete){const size=event.size[0]&&event.size[1]?event.size:[image.naturalWidth,image.naturalHeight];context.drawImage(image,event.pos[0],event.pos[1],...size)}
+          else if(!waitingForImage){waitingForImage=true;image.addEventListener('load',()=>{if(frameId===pygameFrameId)paintPygameFrame(frame,frameId)},{once:true})}
+        }
+      }
+    });
+    interfaceContext.clearRect(0,0,interfaceCanvas.width,interfaceCanvas.height);interfaceContext.drawImage(buffer,0,0);
+  }
   function renderPygameEvent(event){
     if(!interfaceCanvas?.isConnected)return;
     if(event.kind==='pygame-display'){
-      interfaceCanvas.width=event.size[0];interfaceCanvas.height=event.size[1];interfaceContext=interfaceCanvas.getContext('2d');revealInterface();return;
-    }
-    const context=interfaceContext||interfaceCanvas.getContext('2d');
-    context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.color||'#111827';context.lineWidth=event.width||2;
-    if(event.kind==='pygame-fill'){if(event.rect)context.fillRect(...event.rect);else context.fillRect(0,0,interfaceCanvas.width,interfaceCanvas.height)}
-    if(event.kind==='pygame-rect'){event.width?context.strokeRect(...event.rect):context.fillRect(...event.rect)}
-    if(event.kind==='pygame-line'){context.moveTo(...event.start);context.lineTo(...event.end);context.stroke()}
-    if(event.kind==='pygame-lines'||event.kind==='pygame-polygon'){event.points.forEach((point,index)=>index?context.lineTo(...point):context.moveTo(...point));if(event.closed||event.kind==='pygame-polygon')context.closePath();event.width?context.stroke():context.fill()}
-    if(event.kind==='pygame-circle'){context.arc(event.center[0],event.center[1],Math.abs(event.radius),0,Math.PI*2);event.width?context.stroke():context.fill()}
-    if(event.kind==='pygame-text'){context.font=event.size+'px Arial';context.textBaseline='top';context.fillText(event.text,event.pos[0],event.pos[1])}
-    if(event.kind==='pygame-image'){
-      const filename=event.name.replaceAll('\\','/').split('/').pop();
-      const asset=assets.find(item=>item.name===filename&&item.type.startsWith('image/'));
-      if(asset){
-        let image=assetImageCache.get(filename);
-        if(!image){image=new Image();image.src=asset.url;assetImageCache.set(filename,image)}
-        const draw=()=>{const size=event.size[0]&&event.size[1]?event.size:[image.naturalWidth,image.naturalHeight];context.drawImage(image,event.pos[0],event.pos[1],...size)};
-        if(image.complete)draw();else image.addEventListener('load',draw,{once:true});
-      }
+      interfaceCanvas.width=event.size[0];interfaceCanvas.height=event.size[1];interfaceContext=interfaceCanvas.getContext('2d');pygameFrame=[];revealInterface();return;
     }
     if(event.kind==='pygame-sound'||event.kind==='pygame-music'){
       const filename=event.name.replaceAll('\\','/').split('/').pop();
@@ -133,6 +141,9 @@ print("Удвоенное значение:", number * 2)`;
     if(event.kind==='pygame-audio-stop'){activeAudio.forEach(audio=>{audio.pause();audio.currentTime=0});activeAudio=[]}
     if(event.kind==='pygame-audio-pause')activeAudio.forEach(audio=>audio.pause());
     if(event.kind==='pygame-audio-unpause')activeAudio.forEach(audio=>audio.play().catch(()=>{}));
+    if(event.kind==='pygame-present'){
+      const frame=pygameFrame;pygameFrame=[];paintPygameFrame(frame,++pygameFrameId);
+    }else if(!event.kind.startsWith('pygame-audio')&&!['pygame-sound','pygame-music'].includes(event.kind))pygameFrame.push(event);
   }
   const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
 def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}))
@@ -295,6 +306,9 @@ class Clock:
   if delay: await asyncio.sleep(delay)
   return int(delay*1000)
  def get_fps(self): return 0.
+async def _wait(ms):
+ await asyncio.sleep(max(0,float(ms))/1000)
+ return int(ms)
 class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
  def render(self,text,antialias,color,background=None):
@@ -406,7 +420,7 @@ pygame.display=_pg_module('display',set_mode=_display.set_mode,set_caption=_disp
 pygame.draw=_pg_module('draw',rect=_draw.rect,line=_draw.line,lines=_draw.lines,circle=_draw.circle,polygon=_draw.polygon)
 pygame.event=_pg_module('event',get=_events.get,pump=_events.pump,Event=_events.Event)
 pygame.key=_pg_module('key',get_pressed=_get_pressed_keys,get_focused=lambda:False,name=lambda key:str(key))
-pygame.time=_pg_module('time',Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
+pygame.time=_pg_module('time',Clock=Clock,delay=_wait,wait=_wait)
 pygame.font=_pg_module('font',Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
 pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; pygame.image.save=_save_image
 pygame.sprite=_pg_module('sprite',Sprite=Sprite,Group=Group,GroupSingle=GroupSingle,spritecollide=spritecollide,spritecollideany=spritecollideany,collide_rect=collide_rect)
@@ -522,7 +536,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           runtime.globals.set('_pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);
-          const prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.tick\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          const prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           await runtime.runPythonAsync(prepared,{filename:'main.py'});flush();send('done');
         }catch(error){flush();send('error',{message:String(error?.message||error)})}
       }
