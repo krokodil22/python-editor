@@ -172,6 +172,30 @@ class Canvas(_Widget):
  def create_line(self,*points,**kw): _event('line',points=list(points),color=kw.get('fill','black'),width=kw.get('width',1))
  def create_rectangle(self,*points,**kw): _event('rectangle',points=list(points),color=kw.get('fill',''))
 for _n,_v in {'Tk':Tk,'Label':Label,'Button':Button,'Entry':Entry,'Frame':Frame,'Canvas':Canvas}.items(): setattr(tk,_n,_v)
+def _tk_module(name, **members):
+ module=types.ModuleType('tkinter.'+name); module.__dict__.update(members); setattr(tk,name,module); sys.modules['tkinter.'+name]=module; return module
+class Variable:
+ def __init__(self,master=None,value=None,name=None): self._value=value
+ def get(self): return self._value
+ def set(self,value): self._value=value
+class StringVar(Variable):
+ def get(self): return '' if self._value is None else str(self._value)
+class IntVar(Variable):
+ def get(self): return int(self._value or 0)
+class DoubleVar(Variable):
+ def get(self): return float(self._value or 0.)
+class BooleanVar(Variable):
+ def get(self): return bool(self._value)
+for _n,_v in {'Variable':Variable,'StringVar':StringVar,'IntVar':IntVar,'DoubleVar':DoubleVar,'BooleanVar':BooleanVar}.items(): setattr(tk,_n,_v)
+_tk_module('ttk',Frame=Frame,Label=Label,Button=Button,Entry=Entry)
+_tk_module('messagebox',showinfo=lambda title,message:_event('messagebox',title=str(title),message=str(message)),showwarning=lambda title,message:_event('messagebox',title=str(title),message=str(message)),showerror=lambda title,message:_event('messagebox',title=str(title),message=str(message)),askyesno=lambda *a,**kw:True,askokcancel=lambda *a,**kw:True)
+_tk_module('filedialog',askopenfilename=lambda **kw:'',asksaveasfilename=lambda **kw:'',askdirectory=lambda **kw:'')
+_tk_module('colorchooser',askcolor=lambda **kw:((0,0,0),'#000000'))
+_tk_module('simpledialog',askstring=lambda *a,**kw:None,askinteger=lambda *a,**kw:None,askfloat=lambda *a,**kw:None)
+_tk_module('font',Font=type('Font',(),{'__init__':lambda self,*a,**kw:None}))
+_tk_module('scrolledtext',ScrolledText=Entry)
+for _name in ('commondialog','constants','dialog','dnd','tix'):
+ if not hasattr(tk,_name): _tk_module(_name)
 sys.modules['tkinter']=tk
 
 # turtle records drawing commands for the browser canvas.
@@ -426,6 +450,10 @@ pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; py
 pygame.sprite=_pg_module('sprite',Sprite=Sprite,Group=Group,GroupSingle=GroupSingle,spritecollide=spritecollide,spritecollideany=spritecollideany,collide_rect=collide_rect)
 pygame.mixer=_pg_module('mixer',Sound=Sound,Channel=Channel,music=_Music(),init=lambda *a,**kw:None,quit=lambda:None,get_init=lambda:(44100,-16,2),get_busy=lambda:False,stop=lambda:_event('pygame-audio-stop'),pause=lambda:_event('pygame-audio-pause'),unpause=lambda:_event('pygame-audio-unpause'))
 pygame.transform=_pg_module('transform',scale=_scale_surface,smoothscale=_scale_surface,scale_by=_scale_by,smoothscale_by=_scale_by,rotate=_rotate_surface,flip=_flip_surface,rotozoom=_rotozoom_surface)
+# Keep the complete public pygame package tree importable.  Modules which need
+# SDL hardware are represented by browser-safe modules instead of failing at import.
+for _module_name in ('base','bufferproxy','camera','color','constants','cursors','fastevent','freetype','gfxdraw','joystick','mask','math','midi','mouse','pixelarray','pixelcopy','rwobject','scrap','sndarray','surfarray','sysfont','tests','touch','version'):
+ if not hasattr(pygame,_module_name): _pg_module(_module_name)
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
 for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
@@ -449,9 +477,27 @@ class QLineEdit(Entry): pass
 class QVBoxLayout:
  def __init__(self): self.items=[]
  def addWidget(self,w): self.items.append(w); _event('widget',widget=type(w).__name__,**w.kw)
-for _n,_v in {'QApplication':QApplication,'QWidget':QWidget,'QLabel':QLabel,'QPushButton':QPushButton,'QLineEdit':QLineEdit,'QVBoxLayout':QVBoxLayout}.items(): setattr(qtwidgets,_n,_v)
+class QHBoxLayout(QVBoxLayout): pass
+class QGridLayout(QVBoxLayout):
+ def addWidget(self,w,*position): super().addWidget(w)
+class _Signal:
+ def __init__(self,*types): self._callbacks=[]
+ def connect(self,callback): self._callbacks.append(callback)
+ def emit(self,*args):
+  for callback in self._callbacks: callback(*args)
+class QObject: pass
+class QTimer(QObject):
+ timeout=_Signal()
+ def start(self,*args): pass
+ def stop(self): pass
+qtcore=types.ModuleType('QtCore'); qtgui=types.ModuleType('QtGui')
+for _n,_v in {'QObject':QObject,'QTimer':QTimer,'pyqtSignal':_Signal,'Signal':_Signal,'Slot':lambda *a,**kw:(lambda fn:fn),'pyqtSlot':lambda *a,**kw:(lambda fn:fn)}.items(): setattr(qtcore,_n,_v)
+for _n,_v in {'QApplication':QApplication,'QWidget':QWidget,'QLabel':QLabel,'QPushButton':QPushButton,'QLineEdit':QLineEdit,'QVBoxLayout':QVBoxLayout,'QHBoxLayout':QHBoxLayout,'QGridLayout':QGridLayout}.items(): setattr(qtwidgets,_n,_v)
 for _pkg in ('PyQt5','PyQt6','pyqt'):
- package=types.ModuleType(_pkg); package.QtWidgets=qtwidgets; sys.modules[_pkg]=package; sys.modules[_pkg+'.QtWidgets']=qtwidgets
+ package=types.ModuleType(_pkg); package.__path__=[]; package.QtWidgets=qtwidgets; package.QtCore=qtcore; package.QtGui=qtgui; sys.modules[_pkg]=package
+ for _name,_module in {'QtWidgets':qtwidgets,'QtCore':qtcore,'QtGui':qtgui}.items(): sys.modules[_pkg+'.'+_name]=_module
+ for _name in ('QtBluetooth','QtDBus','QtDesigner','QtHelp','QtLocation','QtMultimedia','QtMultimediaWidgets','QtNetwork','QtNfc','QtOpenGL','QtOpenGLWidgets','QtPositioning','QtPrintSupport','QtQml','QtQuick','QtQuickWidgets','QtRemoteObjects','QtSensors','QtSerialPort','QtSql','QtSvg','QtSvgWidgets','QtTest','QtWebChannel','QtWebEngineCore','QtWebEngineWidgets','QtWebSockets','QtXml'):
+  _module=types.ModuleType(_pkg+'.'+_name); setattr(package,_name,_module); sys.modules[_pkg+'.'+_name]=_module
 `;
   function showInterface(source){
     const graphical=/\\b(?:tkinter|turtle|pygame|PyQt[56]|pyqt)\\b/.test(source)||guiEvents.length;
@@ -520,6 +566,22 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
       function send(type,data={}){postMessage({type,...data})}
       function write(text,kind='result'){if(text!==undefined&&text!==null&&String(text))send('output',{text:String(text),kind})}
       function flush(){if(stdoutBuffer){write(stdoutBuffer);stdoutBuffer=''}}
+      async function loadThirdPartyPackages(source){
+        // Pyodide ships Pillow as a compiled package, while emoji is a pure
+        // Python wheel. Load either one (including all of its submodules) before
+        // user code runs; aliases cover the names beginners commonly try.
+        if(/(^|[;\\n]\\s*)(?:from\\s+PIL(?:\\.|\\s)|import\\s+(?:PIL|pillow)\\b)/m.test(source)){
+          send('status',{label:'Загрузка Pillow…'});
+          await runtime.loadPackage('pillow');
+          await runtime.runPythonAsync("import PIL, sys; sys.modules.setdefault('pillow', PIL)");
+        }
+        if(/(^|[;\\n]\\s*)(?:from\\s+emoji(?:\\.|\\s)|import\\s+emoji\\b)/m.test(source)){
+          send('status',{label:'Загрузка emoji…'});
+          await runtime.loadPackage('micropip');
+          const micropip=runtime.pyimport('micropip');
+          try{await micropip.install('emoji')}finally{micropip.destroy()}
+        }
+      }
       async function initialize(){
         send('status',{label:'Загрузка Python…'});importScripts(PYODIDE_URL);
         runtime=await loadPyodide({indexURL:PYODIDE_URL.replace(/pyodide\\.js$/,''),stderr:text=>write(text,'error'),stdin:()=>''});
@@ -530,6 +592,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           if(!runtime)await initialize();
           for(const file of files)runtime.FS.writeFile(file.name,new Uint8Array(file.data));
           send('status',{label:'Проверка импортов…'});
+          await loadThirdPartyPackages(source);
           await runtime.loadPackagesFromImports(source,{messageCallback:()=>{},errorCallback:()=>{}});
           runtime.globals.set('__pystudio_gui_event',event=>send('gui',{event:JSON.parse(event)}));
           runtime.globals.set('_pystudio_key_pressed',key=>pressedKeys.has(Number(key)));
