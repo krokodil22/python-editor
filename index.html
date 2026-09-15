@@ -183,10 +183,11 @@ class Rect:
  def collidepoint(self,point): return self.x<=point[0]<=self.x+self.w and self.y<=point[1]<=self.y+self.h
  def __iter__(self): return iter((self.x,self.y,self.w,self.h))
 class Surface:
- def __init__(self,size=(640,400),flags=0): self.size=tuple(size)
+ def __init__(self,size=(640,400),flags=0,_asset=None): self.size=tuple(size); self._asset=_asset
  def fill(self,color,rect=None): _event('pygame-fill',color=_pg_color(color),rect=list(rect) if rect else None)
  def blit(self,source,dest):
   if hasattr(source,'text'): _event('pygame-text',text=source.text,pos=list(dest),color=source.color,size=source.font_size)
+  elif getattr(source,'_asset',None): _event('pygame-image',name=source._asset,pos=list(dest),size=list(source.size))
   return Rect(*(list(dest)[:2]+list(getattr(source,'size',(0,0)))))
  def get_width(self): return self.size[0]
  def get_height(self): return self.size[1]
@@ -231,12 +232,18 @@ class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
  def render(self,text,antialias,color,background=None):
   rendered=Surface((max(1,int(len(str(text))*self.size*.62)),self.size+4)); rendered.text=str(text); rendered.color=_pg_color(color); rendered.font_size=self.size; return rendered
+def _load_image(filename):
+ # Opening the file here gives pygame users the expected FileNotFoundError.
+ with open(filename,'rb'): pass
+ return Surface((0,0),_asset=str(filename))
+def _save_image(surface,filename): raise NotImplementedError('pygame.image.save is not available in the browser')
 pygame.display=_Display(); pygame.draw=_Draw(); pygame.event=_Events(); pygame.time=types.SimpleNamespace(Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
 pygame.font=types.SimpleNamespace(Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
+pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; pygame.image.save=_save_image
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
 for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
-sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals
+sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals; sys.modules['pygame.image']=pygame.image
 
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
 qtwidgets=types.ModuleType('QtWidgets')
@@ -283,6 +290,11 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
         if(event.kind==='pygame-lines'||event.kind==='pygame-polygon'){event.points.forEach((point,index)=>index?context.lineTo(...point):context.moveTo(...point));if(event.closed||event.kind==='pygame-polygon')context.closePath();event.width?context.stroke():context.fill()}
         if(event.kind==='pygame-circle'){context.arc(event.center[0],event.center[1],Math.abs(event.radius),0,Math.PI*2);event.width?context.stroke():context.fill()}
         if(event.kind==='pygame-text'){context.font=event.size+'px Arial';context.textBaseline='top';context.fillText(event.text,event.pos[0],event.pos[1])}
+        if(event.kind==='pygame-image'){
+          const filename=event.name.replaceAll('\\\\','/').split('/').pop();
+          const asset=assets.find(item=>item.name===filename&&item.type.startsWith('image/'));
+          if(asset){const image=new Image();image.onload=()=>{const size=event.size[0]&&event.size[1]?event.size:[image.naturalWidth,image.naturalHeight];context.drawImage(image,event.pos[0],event.pos[1],...size)};image.src=asset.url}
+        }
         if(event.kind==='turtle-line'){context.moveTo(320+event.x1,200-event.y1);context.lineTo(320+event.x2,200-event.y2);context.stroke()}
         if(event.kind==='turtle-circle'){context.arc(320+event.x,200-event.y-event.r,Math.abs(event.r),0,Math.PI*2);context.stroke()}
         if(event.kind==='line'){context.moveTo(event.points[0],event.points[1]);context.lineTo(event.points[2],event.points[3]);context.stroke()}
