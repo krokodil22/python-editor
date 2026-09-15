@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PyStudio — редактор Python</title><link rel="icon" href="logo.webp">
 <style>
-html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155}.entry.input input{width:150px;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc}canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
+html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc}canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
 </style>
 </head><body>
 <div class="app"><header class="top"><div class="brand"><img src="logo.webp" alt="PyStudio"><span>Py<b>Studio</b></span></div><span class="file">main.py · локальный проект</span><div class="actions"><label class="upload-button">↥ Открыть .py<input id="pythonFile" type="file" accept=".py,text/x-python"></label><label class="upload-button">＋ Медиа<input id="mediaFiles" type="file" accept="image/*,audio/*" multiple></label><button id="save">⤓ Скачать .py</button><button id="reset">↺ Пример</button><button class="run" id="run">▶ Запустить <span class="shortcut">Ctrl ↵</span></button></div></header>
@@ -53,7 +53,7 @@ print("Удвоенное значение:", number * 2)`;
     renderAssets();event.target.value='';
   });
   const PYODIDE_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';
-  let pyodidePromise,stdoutBuffer='';
+  let pyodidePromise,stdoutBuffer='',pendingInput;
   const decoder=new TextDecoder();
   function setState(kind,label){state.className='state'+(kind?' '+kind:'');state.querySelector('b').textContent=label}
   function writePython(text,kind='result'){
@@ -63,6 +63,26 @@ print("Удвоенное значение:", number * 2)`;
     add(value.replace(/\n$/, ''),kind);
   }
   function flushStdout(){if(stdoutBuffer){writePython(stdoutBuffer);stdoutBuffer=''}}
+  function requestConsoleInput(prompt=''){
+    return new Promise(resolve=>{
+      const entry=document.createElement('div');entry.className='entry input';
+      const label=document.createElement('label');label.textContent=prompt;
+      const input=document.createElement('input');input.type='text';input.autocomplete='off';input.spellcheck=false;input.setAttribute('aria-label',prompt||'Ввод программы');
+      const hint=document.createElement('span');hint.className='input-hint';hint.textContent='Enter';
+      entry.append(label,input,hint);out.append(entry);out.scrollTop=out.scrollHeight;
+      const finish=value=>{
+        if(pendingInput?.input!==input)return;
+        pendingInput=undefined;input.disabled=true;hint.remove();
+        resolve(value);
+      };
+      input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();finish(input.value)}});
+      pendingInput={input,finish};
+      input.focus();
+    });
+  }
+  function prepareInteractiveCode(source){
+    return source.replace(/\binput\s*\(/g,'await __pystudio_input(');
+  }
   function loadPython(){
     if(pyodidePromise)return pyodidePromise;
     pyodidePromise=new Promise((resolve,reject)=>{
@@ -73,13 +93,7 @@ print("Удвоенное значение:", number * 2)`;
           const runtime=await window.loadPyodide({
             indexURL:PYODIDE_URL.replace(/pyodide\.js$/, ''),
             stderr:text=>writePython(text,'error'),
-            stdin:()=>{
-              flushStdout();
-              const answer=window.prompt('Ввод программы (input):');
-              const entered=answer===null?'':answer;
-              writePython(entered);
-              return entered+'\n';
-            }
+            stdin:()=>''
           });
           runtime.setStdout({write:bytes=>{
             stdoutBuffer+=decoder.decode(bytes,{stream:true});
@@ -103,7 +117,8 @@ print("Удвоенное значение:", number * 2)`;
     try{
       const runtime=await loadPython();
       setState('running','Выполняется');
-      await runtime.runPythonAsync(code.value, {filename:'main.py'});
+      runtime.globals.set('__pystudio_input',requestConsoleInput);
+      await runtime.runPythonAsync(prepareInteractiveCode(code.value), {filename:'main.py'});
       flushStdout();
       setState('done','Завершено');
     }catch(error){
