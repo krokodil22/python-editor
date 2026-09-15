@@ -4,12 +4,12 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PyStudio — редактор Python</title><link rel="icon" href="logo.webp">
 <style>
-html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.output.interface{padding:0}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc;padding:16px;box-sizing:border-box}.canvas-stage canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.tk-body input{box-sizing:border-box;max-width:100%;padding:6px;border:1px solid #94a3b8;border-radius:4px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
+html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.run.stop{background:#dc2626;border-color:#dc2626}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.output.interface{padding:0}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc;padding:16px;box-sizing:border-box}.canvas-stage canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.tk-body input{box-sizing:border-box;max-width:100%;padding:6px;border:1px solid #94a3b8;border-radius:4px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
 </style>
 </head><body>
 <div class="app"><header class="top"><div class="brand"><img src="logo.webp" alt="PyStudio"><span>Py<b>Studio</b></span></div><span class="file">main.py · локальный проект</span><div class="actions"><label class="upload-button">↥ Открыть .py<input id="pythonFile" type="file" accept=".py,text/x-python"></label><label class="upload-button">＋ Медиа<input id="mediaFiles" type="file" accept="image/*,audio/*" multiple></label><button id="save">⤓ Скачать .py</button><button id="reset">↺ Пример</button><button class="run" id="run">▶ Запустить <span class="shortcut">Ctrl ↵</span></button></div></header>
 <main class="layout">
-<section class="editor-col"><div class="pane-head"><span class="dotfile">●</span>main.py <span class="shortcut">Python 3 · UTF-8</span></div><div class="code-wrap"><pre id="lineNumbers">1</pre><textarea id="code" spellcheck="false" aria-label="Редактор Python"></textarea></div><div class="status">Python 3.12 · выполнение совместимо с интерактивной консолью IDLE</div><div id="assets" class="assets" aria-live="polite"></div></section>
+<section class="editor-col"><div class="pane-head"><span class="dotfile">●</span>main.py <span class="shortcut">Python 3 · UTF-8</span></div><div class="code-wrap"><pre id="lineNumbers">1</pre><textarea id="code" spellcheck="false" aria-label="Редактор Python"></textarea></div><div class="status">Изолированное выполнение · остановка кнопкой или Esc</div><div id="assets" class="assets" aria-live="polite"></div></section>
 <section class="output-col"><div class="pane-head output-head"><div id="runState" class="state"><span></span><b>Консоль</b></div><button class="clear" id="clear">Очистить</button></div><div class="output" id="output" aria-live="polite"></div></section></main></div>
 <script>
 (()=>{
@@ -53,8 +53,10 @@ print("Удвоенное значение:", number * 2)`;
     renderAssets();event.target.value='';
   });
   const PYODIDE_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';
-  let pyodidePromise,librariesPromise,stdoutBuffer='',pendingInput;
-  const decoder=new TextDecoder();
+  let worker,loadTimer,pendingInput,isRunning=false;
+  const runButton=document.querySelector('#run');
+  const MAX_SOURCE_SIZE=200000,MAX_OUTPUT_SIZE=100000;
+  let outputSize=0;
   function setState(kind,label){state.className='state'+(kind?' '+kind:'');state.querySelector('b').textContent=label}
   function writePython(text,kind='result'){
     if(text === undefined || text === null)return;
@@ -62,7 +64,6 @@ print("Удвоенное значение:", number * 2)`;
     if(!value)return;
     add(value.replace(/\n$/, ''),kind);
   }
-  function flushStdout(){if(stdoutBuffer){writePython(stdoutBuffer);stdoutBuffer=''}}
   function requestConsoleInput(prompt=''){
     return new Promise(resolve=>{
       const entry=document.createElement('div');entry.className='entry input';
@@ -80,47 +81,16 @@ print("Удвоенное значение:", number * 2)`;
       input.focus();
     });
   }
-  function prepareInteractiveCode(source){
-    return source.replace(/\binput\s*\(/g,'await __pystudio_input(');
-  }
-  function loadPython(){
-    if(pyodidePromise)return pyodidePromise;
-    pyodidePromise=new Promise((resolve,reject)=>{
-      const script=document.createElement('script');
-      script.src=PYODIDE_URL;
-      script.onload=async()=>{
-        try{
-          const runtime=await window.loadPyodide({
-            indexURL:PYODIDE_URL.replace(/pyodide\.js$/, ''),
-            stderr:text=>writePython(text,'error'),
-            stdin:()=>''
-          });
-          runtime.setStdout({write:bytes=>{
-            stdoutBuffer+=decoder.decode(bytes,{stream:true});
-            let newline;while((newline=stdoutBuffer.indexOf('\n'))!==-1){writePython(stdoutBuffer.slice(0,newline));stdoutBuffer=stdoutBuffer.slice(newline+1)}
-            return bytes.length;
-          }});
-          resolve(runtime);
-        }catch(error){reject(error)}
-      };
-      script.onerror=()=>reject(new Error('Не удалось загрузить Python-рантайм. Проверьте подключение к интернету и перезапустите выполнение.'));
-      document.head.append(script);
-    });
-    return pyodidePromise;
-  }
   function formatPythonError(error){
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
   let interfaceStage,interfaceCanvas,guiEvents=[];
-  function prepareInterface(runtime){
+  function prepareInterface(){
     guiEvents=[];
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
     interfaceCanvas=document.createElement('canvas');interfaceCanvas.width=640;interfaceCanvas.height=400;interfaceCanvas.id='canvas';
     interfaceStage.append(interfaceCanvas);out.append(interfaceStage);
-    // pygame draws here, but the canvas is revealed only after a successful run.
-    runtime.canvas?.setCanvas2D(interfaceCanvas);
-    runtime.globals.set('__pystudio_gui_event',event=>guiEvents.push(JSON.parse(event)));
   }
   const GUI_SHIMS=String.raw`import json, math, sys, types
 def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}))
@@ -232,45 +202,79 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     Array.from(out.children).forEach(child=>{if(child!==interfaceStage)child.remove()});
     out.classList.add('interface');interfaceStage.hidden=false;
   }
-  async function installLibraries(runtime){
-    if(librariesPromise)return librariesPromise;
-    librariesPromise=(async()=>{
-      // random is part of Python's standard library. Pillow and pygame-ce are
-      // WebAssembly builds distributed with Pyodide; pygame-ce exposes `pygame`.
-      await runtime.loadPackage(['pillow','pygame-ce']);
-      // emoji is a pure-Python package, so it can be installed in the browser
-      // through Pyodide's package manager on the first execution.
-      await runtime.loadPackage('micropip');
-      const micropip=runtime.pyimport('micropip');
-      try{
-        await micropip.install('emoji');
-      }finally{
-        micropip.destroy();
+  function setRunning(value){
+    isRunning=value;runButton.classList.toggle('stop',value);
+    runButton.firstChild.textContent=value?'■ Остановить ':'▶ Запустить ';
+    runButton.querySelector('.shortcut').textContent=value?'Esc':'Ctrl ↵';
+  }
+  function stop(reason='Выполнение остановлено пользователем.'){
+    if(!isRunning)return;
+    worker?.terminate();worker=undefined;clearTimeout(loadTimer);
+    if(pendingInput){pendingInput.input.disabled=true;pendingInput=undefined}
+    writePython(reason,'error');setState('','Остановлено');setRunning(false);
+  }
+  function createPythonWorker(){
+    const workerCode=`
+      const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
+      const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
+      let runtime,inputId=0,inputResolvers=new Map(),stdoutBuffer='';
+      const decoder=new TextDecoder();
+      function send(type,data={}){postMessage({type,...data})}
+      function write(text,kind='result'){if(text!==undefined&&text!==null&&String(text))send('output',{text:String(text),kind})}
+      function flush(){if(stdoutBuffer){write(stdoutBuffer);stdoutBuffer=''}}
+      async function initialize(){
+        send('status',{label:'Загрузка Python…'});importScripts(PYODIDE_URL);
+        runtime=await loadPyodide({indexURL:PYODIDE_URL.replace(/pyodide\\.js$/,''),stderr:text=>write(text,'error'),stdin:()=>''});
+        runtime.setStdout({write:bytes=>{stdoutBuffer+=decoder.decode(bytes,{stream:true});let i;while((i=stdoutBuffer.indexOf('\\n'))!==-1){write(stdoutBuffer.slice(0,i));stdoutBuffer=stdoutBuffer.slice(i+1)}return bytes.length}});
+        send('status',{label:'Подключение библиотек…'});await runtime.loadPackage(['pillow','pygame-ce','micropip']);
+        const micropip=runtime.pyimport('micropip');try{await micropip.install('emoji')}finally{micropip.destroy()}
       }
-    })();
-    return librariesPromise;
+      async function run(source){
+        try{
+          if(!runtime)await initialize();
+          send('executing');await runtime.runPythonAsync(GUI_SHIMS);
+          runtime.globals.set('__pystudio_gui_event',event=>send('gui',{event:JSON.parse(event)}));
+          runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
+          const prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(');
+          await runtime.runPythonAsync(prepared,{filename:'main.py'});flush();send('done');
+        }catch(error){flush();send('error',{message:String(error?.message||error)})}
+      }
+      onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}};`;
+    const url=URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'}));
+    const instance=new Worker(url);URL.revokeObjectURL(url);return instance;
   }
   async function run(){
-    clear();setState('running','Загрузка Python…');
-    try{
-      const runtime=await loadPython();
-      setState('running','Подключение библиотек…');
-      await installLibraries(runtime);
-      setState('running','Выполняется');
-      prepareInterface(runtime);
-      await runtime.runPythonAsync(GUI_SHIMS);
-      runtime.globals.set('__pystudio_input',requestConsoleInput);
-      await runtime.runPythonAsync(prepareInteractiveCode(code.value), {filename:'main.py'});
-      flushStdout();
-      showInterface(code.value);
-      setState('done','Завершено');
-    }catch(error){
-      interfaceStage?.remove();out.classList.remove('interface');
-      flushStdout();
-      writePython(formatPythonError(error),'error');
-      setState('','Ошибка');
-    }
+    if(isRunning){stop();return}
+    if(new Blob([code.value]).size>MAX_SOURCE_SIZE){showError(new Error('Программа слишком большая: максимум 200 КБ.'));return}
+    clear();outputSize=0;guiEvents=[];setRunning(true);setState('running','Подготовка…');
+    const instance=createPythonWorker();worker=instance;
+    loadTimer=setTimeout(()=>stop('Не удалось загрузить Python за 60 секунд.'),60000);
+    instance.onerror=event=>{event.preventDefault();stop('Ошибка изолированного Python-процесса. Попробуйте запустить программу снова.')};
+    instance.onmessage=event=>{
+      if(instance!==worker)return;
+      const message=event.data;
+      if(message.type==='status')setState('running',message.label);
+      if(message.type==='executing'){
+        clearTimeout(loadTimer);setState('running','Выполняется');prepareInterface();
+      }
+      if(message.type==='output'){
+        outputSize+=message.text.length;
+        if(outputSize<=MAX_OUTPUT_SIZE)writePython(message.text,message.kind);
+        else stop('Программа остановлена: превышен лимит вывода 100 КБ.');
+      }
+      if(message.type==='gui')guiEvents.push(message.event);
+      if(message.type==='input'){
+        requestConsoleInput(message.prompt).then(value=>{if(instance===worker)instance.postMessage({type:'input',id:message.id,value})});
+      }
+      if(message.type==='done'){
+        clearTimeout(loadTimer);showInterface(code.value);setState('done','Завершено');setRunning(false);instance.terminate();worker=undefined;
+      }
+      if(message.type==='error'){
+        clearTimeout(loadTimer);interfaceStage?.remove();out.classList.remove('interface');writePython(formatPythonError({message:message.message}),'error');setState('','Ошибка');setRunning(false);instance.terminate();worker=undefined;
+      }
+    };
+    worker.postMessage({type:'run',source:code.value});
   }
-  document.querySelector('#run').onclick=run;document.querySelector('#clear').onclick=clear;document.querySelector('#reset').onclick=()=>{code.value=example;update()};document.querySelector('#save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code.value],{type:'text/x-python'}));a.download='main.py';a.click();URL.revokeObjectURL(a.href)};
+  runButton.onclick=run;document.addEventListener('keydown',event=>{if(event.key==='Escape')stop()});document.querySelector('#clear').onclick=clear;document.querySelector('#reset').onclick=()=>{code.value=example;update()};document.querySelector('#save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code.value],{type:'text/x-python'}));a.download='main.py';a.click();URL.revokeObjectURL(a.href)};
 })();
 </script></body></html>
