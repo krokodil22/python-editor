@@ -226,12 +226,12 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
         send('status',{label:'Загрузка Python…'});importScripts(PYODIDE_URL);
         runtime=await loadPyodide({indexURL:PYODIDE_URL.replace(/pyodide\\.js$/,''),stderr:text=>write(text,'error'),stdin:()=>''});
         runtime.setStdout({write:bytes=>{stdoutBuffer+=decoder.decode(bytes,{stream:true});let i;while((i=stdoutBuffer.indexOf('\\n'))!==-1){write(stdoutBuffer.slice(0,i));stdoutBuffer=stdoutBuffer.slice(i+1)}return bytes.length}});
-        send('status',{label:'Подключение библиотек…'});await runtime.loadPackage(['pillow','pygame-ce','micropip']);
-        const micropip=runtime.pyimport('micropip');try{await micropip.install('emoji')}finally{micropip.destroy()}
       }
       async function run(source){
         try{
           if(!runtime)await initialize();
+          send('status',{label:'Проверка импортов…'});
+          await runtime.loadPackagesFromImports(source,{messageCallback:()=>{},errorCallback:()=>{}});
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);
           runtime.globals.set('__pystudio_gui_event',event=>send('gui',{event:JSON.parse(event)}));
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
