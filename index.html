@@ -53,7 +53,7 @@ print("Удвоенное значение:", number * 2)`;
     renderAssets();event.target.value='';
   });
   const PYODIDE_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';
-  let pyodidePromise,stdoutBuffer='',pendingInput;
+  let pyodidePromise,librariesPromise,stdoutBuffer='',pendingInput;
   const decoder=new TextDecoder();
   function setState(kind,label){state.className='state'+(kind?' '+kind:'');state.querySelector('b').textContent=label}
   function writePython(text,kind='result'){
@@ -112,10 +112,37 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
+  function desktopToolkitError(source){
+    const match=source.match(/^\s*(?:from|import)\s+(tkinter|turtle|PyQt\d*|pyqt\d*)\b/im);
+    if(!match)return null;
+    return new Error(`Библиотека ${match[1]} требует нативный оконный интерфейс и не поддерживается браузерным Python-рантаймом. Для tkinter/turtle/PyQt запускайте этот файл в локальном Python.`);
+  }
+  async function installLibraries(runtime){
+    if(librariesPromise)return librariesPromise;
+    librariesPromise=(async()=>{
+      // random is part of Python's standard library. Pillow and pygame-ce are
+      // WebAssembly builds distributed with Pyodide; pygame-ce exposes `pygame`.
+      await runtime.loadPackage(['pillow','pygame-ce']);
+      // emoji is a pure-Python package, so it can be installed in the browser
+      // through Pyodide's package manager on the first execution.
+      await runtime.loadPackage('micropip');
+      const micropip=runtime.pyimport('micropip');
+      try{
+        await micropip.install('emoji');
+      }finally{
+        micropip.destroy();
+      }
+    })();
+    return librariesPromise;
+  }
   async function run(){
     clear();setState('running','Загрузка Python…');
     try{
+      const toolkitError=desktopToolkitError(code.value);
+      if(toolkitError)throw toolkitError;
       const runtime=await loadPython();
+      setState('running','Подключение библиотек…');
+      await installLibraries(runtime);
       setState('running','Выполняется');
       runtime.globals.set('__pystudio_input',requestConsoleInput);
       await runtime.runPythonAsync(prepareInteractiveCode(code.value), {filename:'main.py'});
