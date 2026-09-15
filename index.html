@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PyStudio — редактор Python</title><link rel="icon" href="logo.webp">
 <style>
-html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc}canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
+html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.layout{max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.editor-col,.output-col{min-width:0;border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:14px/22px ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}textarea{box-sizing:border-box;display:block;flex:1;min-width:0;height:100%;border:0;outline:0;resize:none;padding:12px;color:#0f172a;background:#fff;font:14px/22px ui-monospace,Consolas,monospace;line-height:22px;tab-size:4;white-space:pre;overflow:auto}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.output.interface{padding:0}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc;padding:16px;box-sizing:border-box}.canvas-stage canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.tk-body input{box-sizing:border-box;max-width:100%;padding:6px;border:1px solid #94a3b8;border-radius:4px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.top{align-items:flex-start}.file{order:3;width:100%}}
 </style>
 </head><body>
 <div class="app"><header class="top"><div class="brand"><img src="logo.webp" alt="PyStudio"><span>Py<b>Studio</b></span></div><span class="file">main.py · локальный проект</span><div class="actions"><label class="upload-button">↥ Открыть .py<input id="pythonFile" type="file" accept=".py,text/x-python"></label><label class="upload-button">＋ Медиа<input id="mediaFiles" type="file" accept="image/*,audio/*" multiple></label><button id="save">⤓ Скачать .py</button><button id="reset">↺ Пример</button><button class="run" id="run">▶ Запустить <span class="shortcut">Ctrl ↵</span></button></div></header>
@@ -34,7 +34,7 @@ print("Удвоенное значение:", number * 2)`;
   });
   update();
   function add(text,kind=''){const d=document.createElement('div');d.className='entry '+kind;d.textContent=text;out.append(d);out.scrollTop=out.scrollHeight;return d}
-  function clear(){out.innerHTML=''}
+  function clear(){out.innerHTML='';out.classList.remove('interface')}
   function showError(error){clear();add(String(error.message||error),'error');state.className='state';state.querySelector('b').textContent='Ошибка'}
   function renderAssets(){
     assetsBox.innerHTML='';
@@ -112,10 +112,125 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  function desktopToolkitError(source){
-    const match=source.match(/^\s*(?:from|import)\s+(tkinter|turtle|PyQt\d*|pyqt\d*)\b/im);
-    if(!match)return null;
-    return new Error(`Библиотека ${match[1]} требует нативный оконный интерфейс и не поддерживается браузерным Python-рантаймом. Для tkinter/turtle/PyQt запускайте этот файл в локальном Python.`);
+  let interfaceStage,interfaceCanvas,guiEvents=[];
+  function prepareInterface(runtime){
+    guiEvents=[];
+    interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
+    interfaceCanvas=document.createElement('canvas');interfaceCanvas.width=640;interfaceCanvas.height=400;interfaceCanvas.id='canvas';
+    interfaceStage.append(interfaceCanvas);out.append(interfaceStage);
+    // pygame draws here, but the canvas is revealed only after a successful run.
+    runtime.canvas?.setCanvas2D(interfaceCanvas);
+    runtime.globals.set('__pystudio_gui_event',event=>guiEvents.push(JSON.parse(event)));
+  }
+  const GUI_SHIMS=String.raw`import json, math, sys, types
+def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}))
+
+# Browser implementations of the common educational tkinter API.
+tk=types.ModuleType('tkinter'); tk.END='end'; tk.LEFT='left'; tk.RIGHT='right'; tk.TOP='top'; tk.BOTTOM='bottom'
+class _Widget:
+ def __init__(self,master=None,**kw): self.master,self.kw=master,kw
+ def pack(self,**kw): _event('widget',widget=type(self).__name__,**self.kw); return self
+ grid=pack; place=pack
+ def config(self,**kw): self.kw.update(kw)
+ configure=config
+class Tk(_Widget):
+ def __init__(self,*a,**kw): super().__init__(None,**kw); _event('window',title='Python')
+ def title(self,value): _event('title',value=str(value))
+ def geometry(self,value): _event('geometry',value=str(value))
+ def mainloop(self): pass
+ def destroy(self): pass
+class Label(_Widget): pass
+class Button(_Widget): pass
+class Entry(_Widget):
+ def get(self): return str(self.kw.get('value',''))
+ def insert(self,index,value): self.kw['value']=str(value)
+class Frame(_Widget): pass
+class Canvas(_Widget):
+ def create_line(self,*points,**kw): _event('line',points=list(points),color=kw.get('fill','black'),width=kw.get('width',1))
+ def create_rectangle(self,*points,**kw): _event('rectangle',points=list(points),color=kw.get('fill',''))
+for _n,_v in {'Tk':Tk,'Label':Label,'Button':Button,'Entry':Entry,'Frame':Frame,'Canvas':Canvas}.items(): setattr(tk,_n,_v)
+sys.modules['tkinter']=tk
+
+# turtle records drawing commands for the browser canvas.
+turtle=types.ModuleType('turtle'); _tx=_ty=0.; _angle=0.; _pen=True; _color='black'; _width=2
+def forward(n):
+ global _tx,_ty
+ nx=_tx+float(n)*math.cos(math.radians(_angle)); ny=_ty+float(n)*math.sin(math.radians(_angle))
+ if _pen: _event('turtle-line',x1=_tx,y1=_ty,x2=nx,y2=ny,color=_color,width=_width)
+ _tx,_ty=nx,ny
+def backward(n): forward(-n)
+def left(n):
+ global _angle; _angle+=float(n)
+def right(n):
+ global _angle; _angle-=float(n)
+def goto(x,y):
+ global _tx,_ty
+ ox,oy=_tx,_ty; _tx,_ty=float(x),float(y)
+ if _pen: _event('turtle-line',x1=ox,y1=oy,x2=_tx,y2=_ty,color=_color,width=_width)
+def penup():
+ global _pen; _pen=False
+def pendown():
+ global _pen; _pen=True
+def pencolor(value):
+ global _color; _color=str(value)
+def pensize(value):
+ global _width; _width=float(value)
+def circle(radius): _event('turtle-circle',x=_tx,y=_ty,r=float(radius),color=_color,width=_width)
+def done(): pass
+def mainloop(): pass
+class Turtle:
+ forward=staticmethod(forward); fd=staticmethod(forward); backward=staticmethod(backward); bk=staticmethod(backward)
+ left=staticmethod(left); lt=staticmethod(left); right=staticmethod(right); rt=staticmethod(right); goto=staticmethod(goto)
+ penup=staticmethod(penup); up=staticmethod(penup); pendown=staticmethod(pendown); down=staticmethod(pendown)
+ pencolor=staticmethod(pencolor); color=staticmethod(pencolor); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle)
+for _n in ('forward','backward','left','right','goto','penup','pendown','pencolor','pensize','circle','done','mainloop'): setattr(turtle,_n,globals()[_n])
+turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.up=penup; turtle.down=pendown; turtle.Turtle=Turtle
+sys.modules['turtle']=turtle
+
+# PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
+qtwidgets=types.ModuleType('QtWidgets')
+class QApplication:
+ def __init__(self,args): pass
+ def exec(self): return 0
+ exec_=exec
+class QWidget(_Widget):
+ def setWindowTitle(self,value): _event('title',value=str(value))
+ def show(self): _event('window',title='Python')
+ def setLayout(self,layout): self.layout=layout
+class QLabel(_Widget):
+ def __init__(self,text='',master=None): super().__init__(master,text=text)
+class QPushButton(QLabel): pass
+class QLineEdit(Entry): pass
+class QVBoxLayout:
+ def __init__(self): self.items=[]
+ def addWidget(self,w): self.items.append(w); _event('widget',widget=type(w).__name__,**w.kw)
+for _n,_v in {'QApplication':QApplication,'QWidget':QWidget,'QLabel':QLabel,'QPushButton':QPushButton,'QLineEdit':QLineEdit,'QVBoxLayout':QVBoxLayout}.items(): setattr(qtwidgets,_n,_v)
+for _pkg in ('PyQt5','PyQt6','pyqt'):
+ package=types.ModuleType(_pkg); package.QtWidgets=qtwidgets; sys.modules[_pkg]=package; sys.modules[_pkg+'.QtWidgets']=qtwidgets
+`;
+  function showInterface(source){
+    const graphical=/\\b(?:tkinter|turtle|pygame|PyQt[56]|pyqt)\\b/.test(source)||guiEvents.length;
+    if(!graphical){interfaceStage.remove();return}
+    const isWidgets=guiEvents.some(event=>['window','title','widget'].includes(event.kind));
+    if(isWidgets){
+      interfaceCanvas.remove();const win=document.createElement('div');win.className='tk-window';
+      const title=document.createElement('div');title.className='tk-title';title.textContent=guiEvents.findLast(event=>event.kind==='title')?.value||'Python';
+      const body=document.createElement('div');body.className='tk-body';win.append(title,body);interfaceStage.append(win);
+      guiEvents.filter(event=>event.kind==='widget').forEach(event=>{
+        let element;if(/Button/.test(event.widget)){element=document.createElement('button');element.textContent=event.text||'Кнопка'}
+        else if(/Entry|LineEdit/.test(event.widget)){element=document.createElement('input');element.value=event.value||''}
+        else{element=document.createElement('div');element.textContent=event.text||''} body.append(element);
+      });
+    }else{
+      const context=interfaceCanvas.getContext('2d');
+      guiEvents.forEach(event=>{context.beginPath();context.strokeStyle=event.color||'#111827';context.lineWidth=event.width||2;
+        if(event.kind==='turtle-line'){context.moveTo(320+event.x1,200-event.y1);context.lineTo(320+event.x2,200-event.y2);context.stroke()}
+        if(event.kind==='turtle-circle'){context.arc(320+event.x,200-event.y-event.r,Math.abs(event.r),0,Math.PI*2);context.stroke()}
+        if(event.kind==='line'){context.moveTo(event.points[0],event.points[1]);context.lineTo(event.points[2],event.points[3]);context.stroke()}
+      });
+    }
+    Array.from(out.children).forEach(child=>{if(child!==interfaceStage)child.remove()});
+    out.classList.add('interface');interfaceStage.hidden=false;
   }
   async function installLibraries(runtime){
     if(librariesPromise)return librariesPromise;
@@ -138,17 +253,19 @@ print("Удвоенное значение:", number * 2)`;
   async function run(){
     clear();setState('running','Загрузка Python…');
     try{
-      const toolkitError=desktopToolkitError(code.value);
-      if(toolkitError)throw toolkitError;
       const runtime=await loadPython();
       setState('running','Подключение библиотек…');
       await installLibraries(runtime);
       setState('running','Выполняется');
+      prepareInterface(runtime);
+      await runtime.runPythonAsync(GUI_SHIMS);
       runtime.globals.set('__pystudio_input',requestConsoleInput);
       await runtime.runPythonAsync(prepareInteractiveCode(code.value), {filename:'main.py'});
       flushStdout();
+      showInterface(code.value);
       setState('done','Завершено');
     }catch(error){
+      interfaceStage?.remove();out.classList.remove('interface');
       flushStdout();
       writePython(formatPythonError(error),'error');
       setState('','Ошибка');
