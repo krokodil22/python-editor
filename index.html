@@ -90,7 +90,7 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  let interfaceStage,interfaceCanvas,guiEvents=[];
+  let interfaceStage,interfaceCanvas,guiEvents=[],activeAudio=[];
   function prepareInterface(){
     guiEvents=[];
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
@@ -238,6 +238,42 @@ def _load_image(filename):
  with open(filename,'rb'): pass
  return Surface((0,0),_asset=str(filename))
 def _save_image(surface,filename): raise NotImplementedError('pygame.image.save is not available in the browser')
+def _audio_filename(source):
+ if not isinstance(source,(str,bytes)): raise TypeError('Sound source must be a filename')
+ filename=source.decode() if isinstance(source,bytes) else source
+ with open(filename,'rb'): pass
+ return str(filename)
+class Sound:
+ def __init__(self,source): self._filename=_audio_filename(source); self._volume=1.
+ def play(self,loops=0,maxtime=0,fade_ms=0): _event('pygame-sound',name=self._filename,loops=int(loops),volume=self._volume); return Channel(0)
+ def stop(self): _event('pygame-audio-stop',name=self._filename)
+ def fadeout(self,time): self.stop()
+ def set_volume(self,value): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_length(self): return 0.
+class Channel:
+ def __init__(self,index): self.index=int(index); self._volume=1.
+ def play(self,sound,loops=0,maxtime=0,fade_ms=0): return sound.play(loops,maxtime,fade_ms)
+ def stop(self): _event('pygame-audio-stop')
+ def pause(self): _event('pygame-audio-pause')
+ def unpause(self): _event('pygame-audio-unpause')
+ def set_volume(self,value,*right): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_busy(self): return False
+class _Music:
+ def __init__(self): self._filename=None; self._volume=1.
+ def load(self,source): self._filename=_audio_filename(source)
+ def unload(self): self.stop(); self._filename=None
+ def play(self,loops=0,start=0.,fade_ms=0):
+  if self._filename is None: raise RuntimeError('music not loaded')
+  _event('pygame-music',name=self._filename,loops=int(loops),volume=self._volume)
+ def stop(self): _event('pygame-audio-stop',music=True)
+ def pause(self): _event('pygame-audio-pause',music=True)
+ def unpause(self): _event('pygame-audio-unpause',music=True)
+ def fadeout(self,time): self.stop()
+ def set_volume(self,value): self._volume=max(0.,min(1.,float(value)))
+ def get_volume(self): return self._volume
+ def get_busy(self): return False
 class Sprite:
  def __init__(self,*groups): self.__groups=set(); self.add(*groups)
  def add(self,*groups):
@@ -292,10 +328,11 @@ pygame.time=_pg_module('time',Clock=Clock,delay=lambda ms:None,wait=lambda ms:No
 pygame.font=_pg_module('font',Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
 pygame.image=types.ModuleType('pygame.image'); pygame.image.load=_load_image; pygame.image.save=_save_image
 pygame.sprite=_pg_module('sprite',Sprite=Sprite,Group=Group,GroupSingle=GroupSingle,spritecollide=spritecollide,collide_rect=collide_rect)
+pygame.mixer=_pg_module('mixer',Sound=Sound,Channel=Channel,music=_Music(),init=lambda *a,**kw:None,quit=lambda:None,get_init=lambda:(44100,-16,2),get_busy=lambda:False,stop=lambda:_event('pygame-audio-stop'),pause=lambda:_event('pygame-audio-pause'),unpause=lambda:_event('pygame-audio-unpause'))
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
 for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
-pygame.__all__=['display','draw','event','time','font','image','sprite','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN']
+pygame.__all__=['display','draw','event','time','font','image','sprite','mixer','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN']
 sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals; sys.modules['pygame.image']=pygame.image
 
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
@@ -348,6 +385,14 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           const asset=assets.find(item=>item.name===filename&&item.type.startsWith('image/'));
           if(asset){const image=new Image();image.onload=()=>{const size=event.size[0]&&event.size[1]?event.size:[image.naturalWidth,image.naturalHeight];context.drawImage(image,event.pos[0],event.pos[1],...size)};image.src=asset.url}
         }
+        if(event.kind==='pygame-sound'||event.kind==='pygame-music'){
+          const filename=event.name.replaceAll('\\','/').split('/').pop();
+          const asset=assets.find(item=>item.name===filename&&item.type.startsWith('audio/'));
+          if(asset){const audio=new Audio(asset.url);audio.volume=event.volume;audio.loop=event.loops<0;activeAudio.push(audio);audio.play().catch(()=>{})}
+        }
+        if(event.kind==='pygame-audio-stop'){activeAudio.forEach(audio=>{audio.pause();audio.currentTime=0});activeAudio=[]}
+        if(event.kind==='pygame-audio-pause')activeAudio.forEach(audio=>audio.pause());
+        if(event.kind==='pygame-audio-unpause')activeAudio.forEach(audio=>audio.play().catch(()=>{}));
         if(event.kind==='turtle-line'){context.moveTo(320+event.x1,200-event.y1);context.lineTo(320+event.x2,200-event.y2);context.stroke()}
         if(event.kind==='turtle-circle'){context.arc(320+event.x,200-event.y-event.r,Math.abs(event.r),0,Math.PI*2);context.stroke()}
         if(event.kind==='line'){context.moveTo(event.points[0],event.points[1]);context.lineTo(event.points[2],event.points[3]);context.stroke()}
@@ -365,6 +410,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     if(!isRunning)return;
     worker?.terminate();worker=undefined;clearTimeout(loadTimer);
     if(pendingInput){pendingInput.input.disabled=true;pendingInput=undefined}
+    activeAudio.forEach(audio=>audio.pause());activeAudio=[];
     writePython(reason,'error');setState('','Остановлено');setRunning(false);
   }
   function createPythonWorker(){
