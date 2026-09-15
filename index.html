@@ -162,6 +162,82 @@ for _n in ('forward','backward','left','right','goto','penup','pendown','pencolo
 turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.up=penup; turtle.down=pendown; turtle.Turtle=Turtle
 sys.modules['turtle']=turtle
 
+# pygame-ce cannot open an SDL window inside a Web Worker.  This small compatible
+# module sends the usual display/draw calls to the browser canvas instead.
+pygame=types.ModuleType('pygame'); pygame.QUIT=256; pygame.KEYDOWN=768; pygame.K_ESCAPE=27
+pygame.K_LEFT=1073741904; pygame.K_RIGHT=1073741903; pygame.K_UP=1073741906; pygame.K_DOWN=1073741905
+class Rect:
+ def __init__(self,*args):
+  values=args[0] if len(args)==1 else args
+  if isinstance(values,Rect): values=(values.x,values.y,values.w,values.h)
+  self.x,self.y,self.w,self.h=map(float,values)
+ @property
+ def width(self): return self.w
+ @property
+ def height(self): return self.h
+ @property
+ def center(self): return (self.x+self.w/2,self.y+self.h/2)
+ @center.setter
+ def center(self,value): self.x,self.y=float(value[0])-self.w/2,float(value[1])-self.h/2
+ def move(self,x,y): return Rect(self.x+x,self.y+y,self.w,self.h)
+ def collidepoint(self,point): return self.x<=point[0]<=self.x+self.w and self.y<=point[1]<=self.y+self.h
+ def __iter__(self): return iter((self.x,self.y,self.w,self.h))
+class Surface:
+ def __init__(self,size=(640,400),flags=0): self.size=tuple(size)
+ def fill(self,color,rect=None): _event('pygame-fill',color=_pg_color(color),rect=list(rect) if rect else None)
+ def blit(self,source,dest):
+  if hasattr(source,'text'): _event('pygame-text',text=source.text,pos=list(dest),color=source.color,size=source.font_size)
+  return Rect(*(list(dest)[:2]+list(getattr(source,'size',(0,0)))))
+ def get_width(self): return self.size[0]
+ def get_height(self): return self.size[1]
+ def get_size(self): return self.size
+ def get_rect(self,**kw):
+  result=Rect(0,0,*self.size)
+  for name,value in kw.items(): setattr(result,name,value)
+  return result
+def _pg_color(value):
+ if isinstance(value,str): return value
+ if hasattr(value,'__iter__'):
+  parts=list(value); return '#%02x%02x%02x'%tuple(int(x) for x in parts[:3])
+ return str(value)
+_pg_surface=Surface(); _pg_event_reads=0
+class _Display:
+ def set_mode(self,size,flags=0,depth=0):
+  global _pg_surface; _pg_surface=Surface(size); _event('pygame-display',size=list(size)); return _pg_surface
+ def set_caption(self,value): _event('title',value=str(value))
+ def flip(self): _event('pygame-present')
+ update=flip
+ def get_surface(self): return _pg_surface
+class _Draw:
+ def rect(self,surface,color,rect,width=0,border_radius=0): _event('pygame-rect',rect=list(rect) if not isinstance(rect,Rect) else [rect.x,rect.y,rect.w,rect.h],color=_pg_color(color),width=width)
+ def line(self,surface,color,start,end,width=1): _event('pygame-line',start=list(start),end=list(end),color=_pg_color(color),width=width)
+ def lines(self,surface,color,closed,points,width=1): _event('pygame-lines',points=[list(p) for p in points],closed=bool(closed),color=_pg_color(color),width=width)
+ def circle(self,surface,color,center,radius,width=0): _event('pygame-circle',center=list(center),radius=radius,color=_pg_color(color),width=width)
+ def polygon(self,surface,color,points,width=0): _event('pygame-polygon',points=[list(p) for p in points],color=_pg_color(color),width=width)
+class _Event:
+ def __init__(self,event_type,**kw): self.type=event_type; self.__dict__.update(kw)
+class _Events:
+ def get(self):
+  # End non-interactive desktop event loops after enough frames so the worker
+  # can return control and present the canvas rather than hanging forever.
+  global _pg_event_reads; _pg_event_reads+=1
+  return [_Event(pygame.QUIT)] if _pg_event_reads>120 else []
+ def pump(self): pass
+ def Event(self,event_type,**kw): return _Event(event_type,**kw)
+class Clock:
+ def tick(self,fps=0): return int(1000/fps) if fps else 0
+ def get_fps(self): return 0.
+class Font:
+ def __init__(self,name=None,size=24): self.size=int(size)
+ def render(self,text,antialias,color,background=None):
+  rendered=Surface((max(1,int(len(str(text))*self.size*.62)),self.size+4)); rendered.text=str(text); rendered.color=_pg_color(color); rendered.font_size=self.size; return rendered
+pygame.display=_Display(); pygame.draw=_Draw(); pygame.event=_Events(); pygame.time=types.SimpleNamespace(Clock=Clock,delay=lambda ms:None,wait=lambda ms:None)
+pygame.font=types.SimpleNamespace(Font=Font,SysFont=lambda name,size,bold=False,italic=False:Font(name,size),init=lambda:None)
+pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
+pygame.locals=types.ModuleType('pygame.locals')
+for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
+sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals
+
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
 qtwidgets=types.ModuleType('QtWidgets')
 class QApplication:
@@ -186,7 +262,8 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
   function showInterface(source){
     const graphical=/\\b(?:tkinter|turtle|pygame|PyQt[56]|pyqt)\\b/.test(source)||guiEvents.length;
     if(!graphical){interfaceStage.remove();return}
-    const isWidgets=guiEvents.some(event=>['window','title','widget'].includes(event.kind));
+    const isPygame=guiEvents.some(event=>event.kind.startsWith('pygame-'));
+    const isWidgets=!isPygame&&guiEvents.some(event=>['window','title','widget'].includes(event.kind));
     if(isWidgets){
       interfaceCanvas.remove();const win=document.createElement('div');win.className='tk-window';
       const title=document.createElement('div');title.className='tk-title';title.textContent=guiEvents.findLast(event=>event.kind==='title')?.value||'Python';
@@ -198,7 +275,14 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
       });
     }else{
       const context=interfaceCanvas.getContext('2d');
-      guiEvents.forEach(event=>{context.beginPath();context.strokeStyle=event.color||'#111827';context.lineWidth=event.width||2;
+      guiEvents.forEach(event=>{context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.color||'#111827';context.lineWidth=event.width||2;
+        if(event.kind==='pygame-display'){interfaceCanvas.width=event.size[0];interfaceCanvas.height=event.size[1]}
+        if(event.kind==='pygame-fill'){if(event.rect)context.fillRect(...event.rect);else context.fillRect(0,0,interfaceCanvas.width,interfaceCanvas.height)}
+        if(event.kind==='pygame-rect'){event.width?context.strokeRect(...event.rect):context.fillRect(...event.rect)}
+        if(event.kind==='pygame-line'){context.moveTo(...event.start);context.lineTo(...event.end);context.stroke()}
+        if(event.kind==='pygame-lines'||event.kind==='pygame-polygon'){event.points.forEach((point,index)=>index?context.lineTo(...point):context.moveTo(...point));if(event.closed||event.kind==='pygame-polygon')context.closePath();event.width?context.stroke():context.fill()}
+        if(event.kind==='pygame-circle'){context.arc(event.center[0],event.center[1],Math.abs(event.radius),0,Math.PI*2);event.width?context.stroke():context.fill()}
+        if(event.kind==='pygame-text'){context.font=event.size+'px Arial';context.textBaseline='top';context.fillText(event.text,event.pos[0],event.pos[1])}
         if(event.kind==='turtle-line'){context.moveTo(320+event.x1,200-event.y1);context.lineTo(320+event.x2,200-event.y2);context.stroke()}
         if(event.kind==='turtle-circle'){context.arc(320+event.x,200-event.y-event.r,Math.abs(event.r),0,Math.PI*2);context.stroke()}
         if(event.kind==='line'){context.moveTo(event.points[0],event.points[1]);context.lineTo(event.points[2],event.points[3]);context.stroke()}
