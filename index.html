@@ -9,13 +9,13 @@ html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;
 </head><body>
 <div class="app"><header class="top"><div class="brand"><img src="logo.webp" alt="PyStudio"><span>Py<b>Studio</b></span></div><span class="file">main.py · локальный проект</span><div class="actions"><label class="upload-button">↥ Открыть .py<input id="pythonFile" type="file" accept=".py,text/x-python"></label><label class="upload-button">＋ Медиа<input id="mediaFiles" type="file" accept="image/*,audio/*" multiple></label><button id="save">⤓ Скачать .py</button><button id="reset">↺ Пример</button><button class="run" id="run">▶ Запустить <span class="shortcut">Ctrl ↵</span></button></div></header>
 <main class="layout">
-<section class="editor-col"><div class="pane-head"><span class="dotfile">●</span>main.py <span class="shortcut">Python 3 · UTF-8</span></div><div class="code-wrap"><pre id="lineNumbers">1</pre><textarea id="code" spellcheck="false" aria-label="Редактор Python"></textarea></div><div class="status">Готово к запуску · встроенный Python-рантайм</div><div id="assets" class="assets" aria-live="polite"></div></section>
+<section class="editor-col"><div class="pane-head"><span class="dotfile">●</span>main.py <span class="shortcut">Python 3 · UTF-8</span></div><div class="code-wrap"><pre id="lineNumbers">1</pre><textarea id="code" spellcheck="false" aria-label="Редактор Python"></textarea></div><div class="status">Python 3.12 · выполнение совместимо с интерактивной консолью IDLE</div><div id="assets" class="assets" aria-live="polite"></div></section>
 <section class="output-col"><div class="pane-head output-head"><div id="runState" class="state"><span></span><b>Консоль</b></div><button class="clear" id="clear">Очистить</button></div><div class="output" id="output" aria-live="polite"></div></section></main></div>
 <script>
 (()=>{
   const code=document.querySelector('#code'), out=document.querySelector('#output'), lines=document.querySelector('#lineNumbers'), state=document.querySelector('#runState'), assetsBox=document.querySelector('#assets');
   const example=`# Добро пожаловать в PyStudio!
-# Код выполняется локально, без подключения к интернету.
+# Python-рантайм загружается при первом запуске.
 
 number = int(input("Введите число: "))
 print("Удвоенное значение:", number * 2)`;
@@ -35,7 +35,7 @@ print("Удвоенное значение:", number * 2)`;
   update();
   function add(text,kind=''){const d=document.createElement('div');d.className='entry '+kind;d.textContent=text;out.append(d);out.scrollTop=out.scrollHeight;return d}
   function clear(){out.innerHTML=''}
-  function showError(error){clear();add('Ошибка: '+error.message,'error');state.className='state';state.querySelector('b').textContent='Ошибка'}
+  function showError(error){clear();add(String(error.message||error),'error');state.className='state';state.querySelector('b').textContent='Ошибка'}
   function renderAssets(){
     assetsBox.innerHTML='';
     assets.forEach(asset=>{const item=document.createElement('span');item.className='asset';
@@ -52,48 +52,66 @@ print("Удвоенное значение:", number * 2)`;
     Array.from(event.target.files).forEach(file=>assets.push({name:file.name,type:file.type,url:URL.createObjectURL(file)}));
     renderAssets();event.target.value='';
   });
-  function value(source,env){
-    let s=source.trim().replace(/\bTrue\b/g,'true').replace(/\bFalse\b/g,'false').replace(/\bNone\b/g,'null');
-    s=s.replace(/random\.randint\(([^,]+),([^\)]+)\)/g,'(Math.floor(Math.random()*($2-$1+1))+$1)').replace(/random\.choice\(([^\)]+)\)/g,'$1[Math.floor(Math.random()*$1.length)]').replace(/\bstr\(/g,'String(').replace(/\bint\(/g,'parseInt(').replace(/\bfloat\(/g,'parseFloat(').replace(/\bround\(/g,'Math.round(');
-    try{return Function(...Object.keys(env),'return ('+s+')')(...Object.values(env))}catch(error){return s.replace(/^['"]|['"]$/g,'')}
+  const PYODIDE_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';
+  let pyodidePromise,stdoutBuffer='';
+  const decoder=new TextDecoder();
+  function setState(kind,label){state.className='state'+(kind?' '+kind:'');state.querySelector('b').textContent=label}
+  function writePython(text,kind='result'){
+    if(text === undefined || text === null)return;
+    const value=String(text);
+    if(!value)return;
+    add(value.replace(/\n$/, ''),kind);
   }
-  function stageCanvas(){out.innerHTML='';const s=document.createElement('div');s.className='canvas-stage';const c=document.createElement('canvas');c.width=700;c.height=500;s.append(c);out.append(s);return c.getContext('2d')}
-  function turtle(src){const ctx=stageCanvas(),env={},p={x:350,y:250,a:-90,pen:true,color:'#111827',width:2};ctx.lineCap='round';ctx.lineJoin='round';function draw(dist){const r=p.a*Math.PI/180,nx=p.x+Math.cos(r)*dist,ny=p.y+Math.sin(r)*dist;if(p.pen){ctx.strokeStyle=p.color;ctx.lineWidth=p.width;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(nx,ny);ctx.stroke()}p.x=nx;p.y=ny}function one(line){line=line.trim();if(!line||line.startsWith('#')||line.startsWith('from ')||line.startsWith('import '))return;let m;if(m=line.match(/^(forward|fd)\((.+)\)/))draw(+value(m[2],env));else if(m=line.match(/^(backward|bk)\((.+)\)/))draw(-value(m[2],env));else if(m=line.match(/^(right|rt)\((.+)\)/))p.a+=+value(m[2],env);else if(m=line.match(/^(left|lt)\((.+)\)/))p.a-=+value(m[2],env);else if(m=line.match(/^color\((.+)\)/)){p.color=String(value(m[1],env)).split(',')[0].replace(/[()'" ]/g,'')||p.color}else if(m=line.match(/^pensize\((.+)\)/))p.width=+value(m[1],env);else if(/^penup\(\)/.test(line))p.pen=false;else if(/^pendown\(\)/.test(line))p.pen=true;else if(m=line.match(/^goto\((.+),(.+)\)/)){p.x=+value(m[1],env);p.y=+value(m[2],env)}else if(m=line.match(/^(\w+)\s*=\s*(.+)$/))env[m[1]]=value(m[2],env)}let a=src.split('\n');for(let i=0;i<a.length;i++){let m=a[i].match(/^\s*for\s+(\w+)\s+in\s+range\(([^)]*)\):/);if(m){let block=[],indent=a[i+1]?.match(/^\s*/)[0].length||0;while(++i<a.length&&a[i].match(/^\s*/)[0].length>=indent)block.push(a[i]);let x=m[2].split(',').map(q=>+value(q,env));let start=x.length===1?0:x[0],end=x.length===1?x[0]:x[1],step=x[2]||1;for(let n=start;n<end;n+=step){env[m[1]]=n;block.forEach(one)}}else one(a[i])}}
-  function consoleRun(src){
-    clear();const env={},program=src.split('\n');
-    const indentation=line=>line.match(/^\s*/)[0].replace(/\t/g,'    ').length;
-    function finish(){state.className='state done';state.querySelector('b').textContent='Завершено'}
-    function runLines(lines,index,baseIndent,done){
-      try{while(index<lines.length){const raw=lines[index],line=raw.trim(),lineNumber=program.indexOf(raw)+1;if(!line||line.startsWith('#')){index++;continue}
-        const indent=indentation(raw);if(indent<baseIndent){done(index);return}if(indent>baseIndent)throw new Error('Неожиданный отступ в строке '+lineNumber);
-        let m;
-        if(m=line.match(/^for\s+(\w+)\s+in\s+range\((.*)\):$/)){
-          const argumentsList=m[2].split(',').map(part=>Number(value(part,env)));
-          if(argumentsList.length<1||argumentsList.length>3||argumentsList.some(Number.isNaN))throw new Error('Некорректный range в строке '+lineNumber);
-          const [start,end,step]=argumentsList.length===1?[0,argumentsList[0],1]:argumentsList.length===2?[argumentsList[0],argumentsList[1],1]:argumentsList;
-          if(step===0)throw new Error('Шаг range не может быть равен нулю в строке '+lineNumber);
-          let blockEnd=index+1;while(blockEnd<lines.length&&(!lines[blockEnd].trim()||indentation(lines[blockEnd])>indent))blockEnd++;
-          const block=lines.slice(index+1,blockEnd),blockIndent=block.find(item=>item.trim()&&!item.trim().startsWith('#'));
-          if(!blockIndent)throw new Error('После for ожидается блок с отступом в строке '+lineNumber);
-          let current=start;
-          function iterate(){if(step>0?current>=end:current<=end){index=blockEnd;return runLines(lines,index,baseIndent,done)}env[m[1]]=current;current+=step;runLines(block,0,indentation(blockIndent),iterate)}
-          return iterate();
-        }
-        index++;
-        if(line.startsWith('import ')||line.startsWith('from '))continue;
-        if(m=line.match(/^print\((.*)\)$/)){const values=m[1].split(/,(?![^\[]*\])/).map(part=>value(part,env));add(values.join(' '),'result');continue}
-        if(m=line.match(/^(\w+)\s*=\s*(int|float)\(\s*input\((.*)\)\s*\)$/)){requestInput(m[3],answer=>{env[m[1]]=m[2]==='int'?parseInt(answer,10):parseFloat(answer);runLines(lines,index,baseIndent,done)},true);return}
-        if(m=line.match(/^(\w+)\s*=\s*input\((.*)\)$/)){requestInput(m[2],answer=>{env[m[1]]=answer;runLines(lines,index,baseIndent,done)});return}
-        if(m=line.match(/^input\((.*)\)$/)){requestInput(m[1],()=>runLines(lines,index,baseIndent,done));return}
-        if(m=line.match(/^(\w+)\s*=\s*(.+)$/)){env[m[1]]=value(m[2],env);continue}
-        throw new Error('Не удалось выполнить строку '+lineNumber+': '+line);
-      }done(index)}catch(error){showError(error)}
+  function flushStdout(){if(stdoutBuffer){writePython(stdoutBuffer);stdoutBuffer=''}}
+  function loadPython(){
+    if(pyodidePromise)return pyodidePromise;
+    pyodidePromise=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src=PYODIDE_URL;
+      script.onload=async()=>{
+        try{
+          const runtime=await window.loadPyodide({
+            indexURL:PYODIDE_URL.replace(/pyodide\.js$/, ''),
+            stderr:text=>writePython(text,'error'),
+            stdin:()=>{
+              flushStdout();
+              const answer=window.prompt('Ввод программы (input):');
+              const entered=answer===null?'':answer;
+              writePython(entered);
+              return entered+'\n';
+            }
+          });
+          runtime.setStdout({write:bytes=>{
+            stdoutBuffer+=decoder.decode(bytes,{stream:true});
+            let newline;while((newline=stdoutBuffer.indexOf('\n'))!==-1){writePython(stdoutBuffer.slice(0,newline));stdoutBuffer=stdoutBuffer.slice(newline+1)}
+            return bytes.length;
+          }});
+          resolve(runtime);
+        }catch(error){reject(error)}
+      };
+      script.onerror=()=>reject(new Error('Не удалось загрузить Python-рантайм. Проверьте подключение к интернету и перезапустите выполнение.'));
+      document.head.append(script);
+    });
+    return pyodidePromise;
+  }
+  function formatPythonError(error){
+    const message=String(error?.message||error).trim();
+    return message.startsWith('PythonError: ')?message.slice(13):message;
+  }
+  async function run(){
+    clear();setState('running','Загрузка Python…');
+    try{
+      const runtime=await loadPython();
+      setState('running','Выполняется');
+      await runtime.runPythonAsync(code.value, {filename:'main.py'});
+      flushStdout();
+      setState('done','Завершено');
+    }catch(error){
+      flushStdout();
+      writePython(formatPythonError(error),'error');
+      setState('','Ошибка');
     }
-    function requestInput(prompt,done,numeric=false){const row=document.createElement('label');row.className='entry input';const caption=value(prompt,env);row.append(document.createTextNode(caption?String(caption):'Ввод:'));const field=document.createElement('input');field.type=numeric?'number':'text';if(numeric)field.step='any';field.autocomplete='off';field.setAttribute('aria-label',caption||'Ввод программы');row.append(field);out.append(row);field.focus();out.scrollTop=out.scrollHeight;field.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();field.disabled=true;done(field.value)}})}
-    runLines(program,0,0,finish);
   }
-  function windowStage(src,qt=false){out.innerHTML='';const s=document.createElement('div');s.className='canvas-stage';const w=document.createElement('div');w.className='tk-window';const label=(src.match(/Label\([^\n]*/) || [])[0]||'Окно приложения';w.innerHTML='<div class="tk-title">'+(qt?'PyQt application':'tkinter')+'</div><div class="tk-body">'+label+'<br><br><button>Кнопка</button></div>';s.append(w);out.append(s)}
-  function run(){state.className='state running';state.querySelector('b').textContent='Выполняется';try{const src=code.value;if(/\b(turtle|pygame)\b/.test(src)){turtle(src);state.className='state done';state.querySelector('b').textContent='Завершено'}else if(/\b(tkinter|PyQt|QApplication)\b/.test(src)){windowStage(src,/PyQt/.test(src));state.className='state done';state.querySelector('b').textContent='Завершено'}else consoleRun(src)}catch(error){showError(error)}}
   document.querySelector('#run').onclick=run;document.querySelector('#clear').onclick=clear;document.querySelector('#reset').onclick=()=>{code.value=example;update()};document.querySelector('#save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code.value],{type:'text/x-python'}));a.download='main.py';a.click();URL.revokeObjectURL(a.href)};
 })();
 </script></body></html>
