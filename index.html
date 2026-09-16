@@ -4,7 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PyStudio — редактор Python</title><link rel="icon" href="logo.webp">
 <style>
-html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.setting{display:inline-flex;align-items:center;gap:6px;padding-left:10px;border-left:1px solid #e2e8f0;color:#475569;font-size:13px}.setting select{font:inherit;color:#0f172a;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:7px 8px;cursor:pointer}.layout-toggle[aria-pressed="true"]{color:#4338ca;background:#e0e7ff;border-color:#a5b4fc}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.run.stop{background:#dc2626;border-color:#dc2626}.layout{--code-size:14px;--code-leading:22px;max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.layout.stacked{grid-template-columns:1fr;grid-template-rows:minmax(360px,55vh) minmax(300px,45vh)}.layout.stacked .editor-col,.layout.stacked .output-col{max-height:none}.editor-col,.output-col{min-width:0;max-height:calc(100dvh - 101px);border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:var(--code-size)/var(--code-leading) ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}.editor-area{position:relative;flex:1;min-width:0;height:100%;overflow:hidden}#highlighting,textarea{box-sizing:border-box;position:absolute;inset:0;margin:0;width:100%;height:100%;border:0;padding:12px;font:var(--code-size)/var(--code-leading) ui-monospace,Consolas,monospace;tab-size:4;white-space:pre;overflow:auto}#highlighting{pointer-events:none;color:#0f172a;background:#fff}#highlighting code{font:inherit}.token-keyword{color:#af00db;font-weight:600}.token-builtin{color:#267f99}.token-string{color:#a31515}.token-number{color:#098658}.token-comment{color:#008000;font-style:italic}.token-decorator,.token-definition{color:#795e26}.token-constant{color:#0000ff}.token-operator{color:#7a3e9d}textarea{z-index:1;display:block;outline:0;resize:none;color:transparent;background:transparent;caret-color:#0f172a;-webkit-text-fill-color:transparent}textarea::selection{background:#add6ff99;-webkit-text-fill-color:transparent}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.output.interface{padding:0}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.asset-download{color:#4338ca;text-decoration:none;font-weight:600}.asset-download:hover{text-decoration:underline}.asset-download:focus-visible{outline:2px solid #818cf8;outline-offset:2px;border-radius:2px}.canvas-stage{height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc;padding:16px;box-sizing:border-box}.canvas-stage[hidden]{display:none}.canvas-stage canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.tk-body input{box-sizing:border-box;max-width:100%;padding:6px;border:1px solid #94a3b8;border-radius:4px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}@media(max-width:850px){.layout,.layout.stacked{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.editor-col,.layout.stacked .editor-col{max-height:58vh}.output-col,.layout.stacked .output-col{max-height:50vh}.top{align-items:flex-start}.file{order:3;width:100%}.setting{padding-left:0;border-left:0}}
+html,body{height:100%;margin:0}body{font-family:Inter,Segoe UI,Arial,sans-serif;background:#f8fafc;color:#0f172a}.app{min-height:100vh;padding:16px}.top{max-width:1400px;margin:0 auto 16px;border-radius:16px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:10px;background:#fff;border:1px solid #e2e8f0}.brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:700;color:#0f172a}.brand img{height:32px;width:auto}.brand b{color:#4f46e5}.file{font-size:13px;color:#64748b}.actions{display:flex;flex-wrap:wrap;gap:8px}.upload-button{display:inline-flex;align-items:center;cursor:pointer;font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px}.upload-button:hover{filter:brightness(.97)}.upload-button input{display:none}button{font:inherit;border:1px solid #cbd5e1;background:#e2e8f0;color:#0f172a;padding:8px 12px;border-radius:10px;cursor:pointer}button:hover{filter:brightness(.97)}.setting{display:inline-flex;align-items:center;gap:6px;padding-left:10px;border-left:1px solid #e2e8f0;color:#475569;font-size:13px}.setting select{font:inherit;color:#0f172a;background:#fff;border:1px solid #cbd5e1;border-radius:8px;padding:7px 8px;cursor:pointer}.layout-toggle[aria-pressed="true"]{color:#4338ca;background:#e0e7ff;border-color:#a5b4fc}.run{color:#fff;background:#4f46e5;border-color:#4f46e5;font-weight:600}.run:hover{background:#4338ca}.run.stop{background:#dc2626;border-color:#dc2626}.layout{--code-size:14px;--code-leading:22px;max-width:1400px;margin:auto;min-height:calc(100vh - 100px);display:grid;grid-template-columns:1fr 1fr;gap:16px}.layout.stacked{grid-template-columns:1fr;grid-template-rows:minmax(360px,55vh) minmax(300px,45vh)}.layout.stacked .editor-col,.layout.stacked .output-col{max-height:none}.editor-col,.output-col{min-width:0;max-height:calc(100dvh - 101px);border-radius:16px;background:#fff;border:1px solid #e2e8f0;overflow:hidden;display:flex;flex-direction:column}.pane-head{padding:10px 12px;border-bottom:1px solid #e2e8f0;font-size:14px;display:flex;align-items:center;min-height:45px}.dotfile{color:#4f46e5;margin-right:7px}.shortcut{margin-left:auto;color:#64748b;font-size:12px}.code-wrap{display:flex;position:relative;flex:1;min-height:0;background:#fff;overflow:hidden}#lineNumbers{box-sizing:border-box;flex:0 0 52px;margin:0;padding:12px 10px;text-align:right;color:#94a3b8;background:#f8fafc;border-right:1px solid #e2e8f0;font:var(--code-size)/var(--code-leading) ui-monospace,Consolas,monospace;white-space:pre;overflow:hidden;user-select:none}.editor-area{position:relative;flex:1;min-width:0;height:100%;overflow:hidden}#highlighting,textarea{box-sizing:border-box;position:absolute;inset:0;margin:0;width:100%;height:100%;border:0;padding:12px;font:var(--code-size)/var(--code-leading) ui-monospace,Consolas,monospace;tab-size:4;white-space:pre;overflow:auto}#highlighting{pointer-events:none;color:#0f172a;background:#fff}#highlighting code{font:inherit}.token-keyword{color:#af00db;font-weight:600}.token-builtin{color:#267f99}.token-string{color:#a31515}.token-number{color:#098658}.token-comment{color:#008000;font-style:italic}.token-decorator,.token-definition{color:#795e26}.token-constant{color:#0000ff}.token-operator{color:#7a3e9d}textarea{z-index:1;display:block;outline:0;resize:none;color:transparent;background:transparent;caret-color:#0f172a;-webkit-text-fill-color:transparent}textarea::selection{background:#add6ff99;-webkit-text-fill-color:transparent}.status{padding:7px 12px;border-top:1px solid #e2e8f0;font-size:12px;color:#64748b;background:#f8fafc}.output-head{background:#fff}.output-head .state{display:flex;gap:7px;align-items:center}.state span{width:8px;height:8px;border-radius:50%;background:#94a3b8}.state.running span{background:#f59e0b}.state.done span{background:#22c55e}.clear{margin-left:auto;padding:5px 9px;font-size:12px}.output{flex:1;min-height:0;overflow:auto;padding:12px;background:#fff;color:#0f172a;font:14px/22px ui-monospace,Consolas,monospace}.output.interface{padding:0}.welcome,.entry.system{color:#64748b}.entry{white-space:pre-wrap;word-break:break-word}.entry.error{color:#dc2626}.entry.result{color:#334155}.entry.input{display:flex;align-items:center;gap:8px;color:#334155;white-space:pre-wrap}.entry.input label{flex:0 1 auto}.entry.input input{width:150px;min-width:0;padding:5px 7px;border:1px solid #94a3b8;border-radius:6px;font:inherit;background:#fff;color:#0f172a}.entry.input input:focus{outline:2px solid #818cf8;outline-offset:1px}.entry.input .input-hint{color:#94a3b8;font-size:12px}.assets{border-top:1px solid #e2e8f0;padding:8px 12px;background:#f8fafc;color:#475569;font-size:12px}.assets:empty{display:none}.asset{display:inline-flex;align-items:center;gap:5px;margin:2px 5px 2px 0;padding:3px 6px;background:#e0e7ff;border-radius:5px}.asset img{width:18px;height:18px;object-fit:cover;border-radius:3px}.asset-download{color:#4338ca;text-decoration:none;font-weight:600}.asset-download:hover{text-decoration:underline}.asset-download:focus-visible{outline:2px solid #818cf8;outline-offset:2px;border-radius:2px}.canvas-stage{position:relative;height:100%;min-height:300px;display:grid;place-items:center;background:#f8fafc;padding:16px;box-sizing:border-box}.canvas-stage[hidden]{display:none}.canvas-stage canvas{max-width:92%;max-height:92%;background:#fff;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18}.tk-window{width:min(430px,90%);background:#fff;color:#0f172a;border:1px solid #cbd5e1;border-radius:8px;box-shadow:0 8px 20px #0f172a18;font-family:Arial}.tk-title{background:#eef2ff;padding:8px 11px;font-size:13px}.tk-body{padding:25px;min-height:150px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}.tk-body input{box-sizing:border-box;max-width:100%;padding:6px;border:1px solid #94a3b8;border-radius:4px}.tk-body button{background:#e2e8f0;color:#0f172a;border-color:#cbd5e1;padding:6px 14px}.tk-modal-layer{position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:18px;box-sizing:border-box;background:#0f172a42}.tk-messagebox{width:min(390px,100%);background:#f8fafc;color:#0f172a;border:1px solid #94a3b8;border-radius:9px;box-shadow:0 18px 45px #0f172a55;font-family:Arial,sans-serif;overflow:hidden}.tk-messagebox-title{padding:8px 12px;background:#eef2ff;border-bottom:1px solid #cbd5e1;font-size:13px;font-weight:600}.tk-messagebox-content{display:flex;align-items:flex-start;gap:14px;padding:22px 20px;min-height:54px}.tk-messagebox-icon{display:grid;place-items:center;flex:0 0 34px;height:34px;border-radius:50%;color:#fff;background:#4f46e5;font-size:22px;font-weight:700}.tk-messagebox[data-icon="warning"] .tk-messagebox-icon{background:#d97706}.tk-messagebox[data-icon="error"] .tk-messagebox-icon{background:#dc2626}.tk-messagebox[data-icon="question"] .tk-messagebox-icon{background:#2563eb}.tk-messagebox-text{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.4 Arial,sans-serif}.tk-messagebox-actions{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px;background:#e2e8f0;border-top:1px solid #cbd5e1}.tk-messagebox-actions button{min-width:78px;padding:6px 14px;background:#fff}.tk-messagebox-actions button:focus{outline:2px solid #6366f1;outline-offset:1px}.tk-messagebox-actions .primary{color:#fff;background:#4f46e5;border-color:#4338ca}@media(max-width:850px){.layout,.layout.stacked{grid-template-columns:1fr;grid-template-rows:58vh 50vh}.editor-col,.layout.stacked .editor-col{max-height:58vh}.output-col,.layout.stacked .output-col{max-height:50vh}.top{align-items:flex-start}.file{order:3;width:100%}.setting{padding-left:0;border-left:0}}
 </style>
 </head><body>
 <div class="app"><header class="top"><div class="brand"><img src="logo.webp" alt="PyStudio"><span>Py<b>Studio</b></span></div><span class="file">main.py · локальный проект</span><div class="actions"><label class="upload-button">↥ Открыть .py<input id="pythonFile" type="file" accept=".py,text/x-python"></label><label class="upload-button">＋ Медиа<input id="mediaFiles" type="file" accept="image/*,audio/*" multiple></label><button id="save">⤓ Скачать .py</button><label class="setting" for="fontSize">Кегль <select id="fontSize" aria-label="Кегль кода"><option value="12">12</option><option value="14">14</option><option value="16">16</option><option value="18">18</option><option value="20">20</option><option value="22">22</option></select></label><button class="layout-toggle" id="layoutToggle" type="button" aria-pressed="false" title="Расположить редактор над консолью">↕ Вид</button><button class="run" id="run">▶ Запустить <span class="shortcut">Ctrl ↵</span></button></div></header>
@@ -253,9 +253,12 @@ def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data},
 
 # Browser implementations of the common educational tkinter API.
 tk=types.ModuleType('tkinter'); tk.END='end'; tk.LEFT='left'; tk.RIGHT='right'; tk.TOP='top'; tk.BOTTOM='bottom'
+_tk_widgets={}; _tk_widget_id=0
 class _Widget:
- def __init__(self,master=None,**kw): self.master,self.kw=master,kw
- def pack(self,**kw): _event('widget',widget=type(self).__name__,**self.kw); return self
+ def __init__(self,master=None,**kw):
+  global _tk_widget_id
+  _tk_widget_id+=1; self._id=_tk_widget_id; self.master,self.kw=master,kw; _tk_widgets[self._id]=self
+ def pack(self,**kw): _event('widget',id=self._id,widget=type(self).__name__,**{key:value for key,value in self.kw.items() if not callable(value)}); return self
  grid=pack; place=pack
  def config(self,**kw): self.kw.update(kw)
  configure=config
@@ -263,7 +266,19 @@ class Tk(_Widget):
  def __init__(self,*a,**kw): super().__init__(None,**kw); _event('window',title='Python')
  def title(self,value): _event('title',value=str(value))
  def geometry(self,value): _event('geometry',value=str(value))
- def mainloop(self): pass
+ async def mainloop(self):
+  _event('mainloop')
+  while True:
+   event_json=_pystudio_tk_take_event()
+   if event_json:
+    event=json.loads(event_json)
+    widget=_tk_widgets.get(int(event.get('id',0)))
+    if widget is not None:
+     if event.get('type')=='value': widget.kw['value']=event.get('value','')
+     elif event.get('type')=='command':
+      result=widget.kw.get('command',lambda:None)()
+      if hasattr(result,'__await__'): await result
+   await asyncio.sleep(.02)
  def destroy(self): pass
 class Label(_Widget): pass
 class Button(_Widget): pass
@@ -291,7 +306,19 @@ class BooleanVar(Variable):
  def get(self): return bool(self._value)
 for _n,_v in {'Variable':Variable,'StringVar':StringVar,'IntVar':IntVar,'DoubleVar':DoubleVar,'BooleanVar':BooleanVar}.items(): setattr(tk,_n,_v)
 _tk_module('ttk',Frame=Frame,Label=Label,Button=Button,Entry=Entry)
-_tk_module('messagebox',showinfo=lambda title,message:_event('messagebox',title=str(title),message=str(message)),showwarning=lambda title,message:_event('messagebox',title=str(title),message=str(message)),showerror=lambda title,message:_event('messagebox',title=str(title),message=str(message)),askyesno=lambda *a,**kw:True,askokcancel=lambda *a,**kw:True)
+async def _messagebox(kind,title=None,message=None,**options):
+ return await __pystudio_messagebox(kind,str(title or ''),str(message or ''),options)
+async def showinfo(title=None,message=None,**kw): await _messagebox('showinfo',title,message,**kw); return 'ok'
+async def showwarning(title=None,message=None,**kw): await _messagebox('showwarning',title,message,**kw); return 'ok'
+async def showerror(title=None,message=None,**kw): await _messagebox('showerror',title,message,**kw); return 'ok'
+async def askquestion(title=None,message=None,**kw): return await _messagebox('askquestion',title,message,**kw)
+async def askyesno(title=None,message=None,**kw): return await _messagebox('askyesno',title,message,**kw)=='yes'
+async def askokcancel(title=None,message=None,**kw): return await _messagebox('askokcancel',title,message,**kw)=='ok'
+async def askretrycancel(title=None,message=None,**kw): return await _messagebox('askretrycancel',title,message,**kw)=='retry'
+async def askyesnocancel(title=None,message=None,**kw):
+ result=await _messagebox('askyesnocancel',title,message,**kw)
+ return None if result=='cancel' else result=='yes'
+_tk_module('messagebox',showinfo=showinfo,showwarning=showwarning,showerror=showerror,askquestion=askquestion,askyesno=askyesno,askokcancel=askokcancel,askretrycancel=askretrycancel,askyesnocancel=askyesnocancel)
 _tk_module('filedialog',askopenfilename=lambda **kw:'',asksaveasfilename=lambda **kw:'',askdirectory=lambda **kw:'')
 _tk_module('colorchooser',askcolor=lambda **kw:((0,0,0),'#000000'))
 _tk_module('simpledialog',askstring=lambda *a,**kw:None,askinteger=lambda *a,**kw:None,askfloat=lambda *a,**kw:None)
@@ -693,10 +720,14 @@ def _pystudio_prepare_input(source):
                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
     async_names = set()
 
+    messagebox_calls = {'showinfo', 'showwarning', 'showerror', 'askquestion',
+                        'askyesno', 'askokcancel', 'askretrycancel', 'askyesnocancel'}
+
     def is_browser_async_call(call):
-        return (isinstance(call, ast.Name) and call.id == 'input') or \
+        return (isinstance(call, ast.Name) and
+                (call.id == 'input' or call.id in messagebox_calls)) or \
                (isinstance(call, ast.Attribute) and
-                call.attr in {'tick', 'wait', 'delay'})
+                call.attr in {'tick', 'wait', 'delay', 'mainloop', *messagebox_calls})
 
     # Include both functions using input directly and helpers which call them.
     changed = True
@@ -762,12 +793,12 @@ async def __pystudio_run(source):
     const isPygame=guiEvents.some(event=>event.kind.startsWith('pygame-'));
     const isWidgets=!isPygame&&guiEvents.some(event=>['window','title','widget'].includes(event.kind));
     if(isWidgets){
-      interfaceCanvas.remove();const win=document.createElement('div');win.className='tk-window';
+      interfaceStage.replaceChildren();const win=document.createElement('div');win.className='tk-window';
       const title=document.createElement('div');title.className='tk-title';title.textContent=guiEvents.findLast(event=>event.kind==='title')?.value||'Python';
       const body=document.createElement('div');body.className='tk-body';win.append(title,body);interfaceStage.append(win);
       guiEvents.filter(event=>event.kind==='widget').forEach(event=>{
-        let element;if(/Button/.test(event.widget)){element=document.createElement('button');element.textContent=event.text||'Кнопка'}
-        else if(/Entry|LineEdit/.test(event.widget)){element=document.createElement('input');element.value=event.value||''}
+        let element;if(/Button/.test(event.widget)){element=document.createElement('button');element.textContent=event.text||'Кнопка';element.onclick=()=>worker?.postMessage({type:'tk-event',event:{type:'command',id:event.id}})}
+        else if(/Entry|LineEdit/.test(event.widget)){element=document.createElement('input');element.value=event.value||'';if(event.show)element.type='password';element.addEventListener('input',()=>worker?.postMessage({type:'tk-event',event:{type:'value',id:event.id,value:element.value}}))}
         else{element=document.createElement('div');element.textContent=event.text||''} body.append(element);
       });
     }else{
@@ -801,6 +832,33 @@ async def __pystudio_run(source):
     Array.from(out.children).forEach(child=>{if(child!==interfaceStage)child.remove()});
     out.classList.add('interface');interfaceStage.hidden=false;
   }
+  function showMessageBox(request,respond){
+    if(guiEvents.some(event=>['window','title','widget'].includes(event.kind)))showInterface();
+    else{revealInterface();interfaceCanvas.hidden=true}
+    const definitions={
+      showinfo:{icon:'info',symbol:'i',buttons:[['OK','ok']]},
+      showwarning:{icon:'warning',symbol:'!',buttons:[['OK','ok']]},
+      showerror:{icon:'error',symbol:'×',buttons:[['OK','ok']]},
+      askquestion:{icon:'question',symbol:'?',buttons:[['Нет','no'],['Да','yes']]},
+      askyesno:{icon:'question',symbol:'?',buttons:[['Нет','no'],['Да','yes']]},
+      askokcancel:{icon:'question',symbol:'?',buttons:[['Отмена','cancel'],['OK','ok']]},
+      askretrycancel:{icon:'warning',symbol:'!',buttons:[['Отмена','cancel'],['Повторить','retry']]},
+      askyesnocancel:{icon:'question',symbol:'?',buttons:[['Отмена','cancel'],['Нет','no'],['Да','yes']]}
+    };
+    const definition=definitions[request.kind]||definitions.showinfo;
+    const layer=document.createElement('div');layer.className='tk-modal-layer';
+    const dialog=document.createElement('div');dialog.className='tk-messagebox';dialog.dataset.icon=definition.icon;dialog.setAttribute('role','alertdialog');dialog.setAttribute('aria-modal','true');
+    const title=document.createElement('div');title.className='tk-messagebox-title';title.textContent=request.title||'Python';
+    const content=document.createElement('div');content.className='tk-messagebox-content';
+    const icon=document.createElement('span');icon.className='tk-messagebox-icon';icon.setAttribute('aria-hidden','true');icon.textContent=definition.symbol;
+    const message=document.createElement('p');message.className='tk-messagebox-text';message.textContent=request.message;content.append(icon,message);
+    const actions=document.createElement('div');actions.className='tk-messagebox-actions';
+    const finish=value=>{layer.remove();respond(value)};
+    definition.buttons.forEach(([label,value],index)=>{const button=document.createElement('button');button.type='button';button.textContent=label;if(index===definition.buttons.length-1)button.className='primary';button.onclick=()=>finish(value);actions.append(button)});
+    dialog.append(title,content,actions);layer.append(dialog);interfaceStage.append(layer);
+    const buttons=Array.from(actions.children);buttons.at(-1).focus();
+    layer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();finish(definition.buttons[0][1])}if(event.key==='Tab'){event.preventDefault();const index=buttons.indexOf(document.activeElement),step=event.shiftKey?-1:1;buttons[(index+step+buttons.length)%buttons.length].focus()}});
+  }
   function setRunning(value){
     isRunning=value;runButton.classList.toggle('stop',value);
     runButton.firstChild.textContent=value?'■ Остановить ':'▶ Запустить ';
@@ -819,7 +877,7 @@ async def __pystudio_run(source):
       const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
       const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
       const INPUT_TRANSFORM=${JSON.stringify(INPUT_TRANSFORM)};
-      let runtime,inputId=0,inputResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[];
+      let runtime,inputId=0,inputResolvers=new Map(),messageboxId=0,messageboxResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[],tkEvents=[];
       const pressedKeys=new Set();
       const decoder=new TextDecoder();
       const mediaTypes={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',gif:'image/gif',webp:'image/webp',bmp:'image/bmp',tif:'image/tiff',tiff:'image/tiff',ico:'image/x-icon',avif:'image/avif',ppm:'image/x-portable-pixmap',wav:'audio/wav',mp3:'audio/mpeg',ogg:'audio/ogg',flac:'audio/flac',m4a:'audio/mp4',aac:'audio/aac'};
@@ -869,7 +927,9 @@ async def __pystudio_run(source):
           runtime.globals.set('_pystudio_key_pressed',key=>pressedKeys.has(Number(key)));
           runtime.globals.set('_pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
           runtime.globals.set('_pystudio_turtle_take_click',()=>turtleClicks.shift()||null);
+          runtime.globals.set('_pystudio_tk_take_event',()=>{const event=tkEvents.shift();return event?JSON.stringify(event):''});
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
+          runtime.globals.set('__pystudio_messagebox',(kind,title,message,options)=>new Promise(resolve=>{const id=++messageboxId;messageboxResolvers.set(id,resolve);send('messagebox',{id,kind:String(kind),title:String(title),message:String(message)})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);await runtime.runPythonAsync(INPUT_TRANSFORM);
           let prepared=source;
           if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
@@ -877,7 +937,7 @@ async def __pystudio_run(source):
           await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});flush();sendMediaFiles();send('done');
         }catch(error){flush();if(runtime)sendMediaFiles();send('error',{message:String(error?.message||error)})}
       }
-      onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true;if(m.type==='turtle-click')turtleClicks.push([Number(m.x),Number(m.y)])};`;
+      onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='messagebox'){const resolve=messageboxResolvers.get(m.id);if(resolve){messageboxResolvers.delete(m.id);resolve(m.value)}}if(m.type==='tk-event')tkEvents.push(m.event);if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true;if(m.type==='turtle-click')turtleClicks.push([Number(m.x),Number(m.y)])};`;
     const url=URL.createObjectURL(new Blob([workerCode],{type:'text/javascript'}));
     const instance=new Worker(url);URL.revokeObjectURL(url);return instance;
   }
@@ -903,10 +963,13 @@ async def __pystudio_run(source):
       if(message.type==='gui'){
         if(message.event.kind.startsWith('pygame-'))renderPygameEvent(message.event);
         else if(message.event.kind.startsWith('turtle-'))renderTurtleEvent(message.event);
-        else guiEvents.push(message.event);
+        else{guiEvents.push(message.event);if(message.event.kind==='mainloop')showInterface()}
       }
       if(message.type==='input'){
         requestConsoleInput(message.prompt).then(value=>{if(instance===worker)instance.postMessage({type:'input',id:message.id,value})});
+      }
+      if(message.type==='messagebox'){
+        showMessageBox(message,value=>{if(instance===worker)instance.postMessage({type:'messagebox',id:message.id,value})});
       }
       if(message.type==='media'){
         message.files.forEach(file=>putAsset(new File([file.data],file.name,{type:file.type})));
