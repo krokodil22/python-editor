@@ -554,6 +554,71 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
  for _name in ('QtBluetooth','QtDBus','QtDesigner','QtHelp','QtLocation','QtMultimedia','QtMultimediaWidgets','QtNetwork','QtNfc','QtOpenGL','QtOpenGLWidgets','QtPositioning','QtPrintSupport','QtQml','QtQuick','QtQuickWidgets','QtRemoteObjects','QtSensors','QtSerialPort','QtSql','QtSvg','QtSvgWidgets','QtTest','QtWebChannel','QtWebEngineCore','QtWebEngineWidgets','QtWebSockets','QtXml'):
   _module=types.ModuleType(_pkg+'.'+_name); setattr(package,_name,_module); sys.modules[_pkg+'.'+_name]=_module
 `;
+  const INPUT_TRANSFORM=String.raw`import ast, inspect
+
+def _pystudio_prepare_input(source):
+    """Compile input() calls so browser prompts can be awaited everywhere."""
+    tree = ast.parse(source, filename='main.py')
+    functions = [node for node in ast.walk(tree)
+                 if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
+    async_names = set()
+
+    # Include both functions using input directly and helpers which call them.
+    changed = True
+    while changed:
+        changed = False
+        for function in functions:
+            calls = [node.func for node in ast.walk(function) if isinstance(node, ast.Call)]
+            needs_async = any(isinstance(node, ast.Await) for node in ast.walk(function))
+            needs_async = needs_async or any(isinstance(call, ast.Name) and
+                              (call.id == 'input' or call.id in async_names)
+                              for call in calls)
+            needs_async = needs_async or any(isinstance(call, ast.Attribute) and
+                                              call.attr in async_names for call in calls)
+            if needs_async and function.name not in async_names:
+                async_names.add(function.name)
+                changed = True
+
+    class InputTransformer(ast.NodeTransformer):
+        def __init__(self):
+            self.inside_await = False
+
+        def visit_FunctionDef(self, node):
+            self.generic_visit(node)
+            if node.name not in async_names:
+                return node
+            replacement = ast.AsyncFunctionDef(
+                name=node.name, args=node.args, body=node.body,
+                decorator_list=node.decorator_list, returns=node.returns,
+                type_comment=node.type_comment)
+            return ast.copy_location(replacement, node)
+
+        def visit_Await(self, node):
+            previous, self.inside_await = self.inside_await, True
+            node.value = self.visit(node.value)
+            self.inside_await = previous
+            return node
+
+        def visit_Call(self, node):
+            self.generic_visit(node)
+            is_input = isinstance(node.func, ast.Name) and node.func.id == 'input'
+            is_async_call = ((isinstance(node.func, ast.Name) and node.func.id in async_names) or
+                             (isinstance(node.func, ast.Attribute) and node.func.attr in async_names))
+            if is_input:
+                node.func = ast.copy_location(ast.Name(id='__pystudio_input', ctx=ast.Load()), node.func)
+            if (is_input or is_async_call) and not self.inside_await:
+                return ast.copy_location(ast.Await(value=node), node)
+            return node
+
+    tree = InputTransformer().visit(tree)
+    ast.fix_missing_locations(tree)
+    return compile(tree, 'main.py', 'exec', flags=ast.PyCF_ALLOW_TOP_LEVEL_AWAIT)
+
+async def __pystudio_run(source):
+    result = eval(_pystudio_prepare_input(source), globals())
+    if inspect.isawaitable(result):
+        await result
+`;
   function showInterface(source){
     const graphical=/\\b(?:tkinter|turtle|pygame|PyQt[56]|pyqt)\\b/.test(source)||guiEvents.length;
     if(!graphical){interfaceStage.remove();return}
@@ -615,6 +680,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
     const workerCode=`
       const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
       const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
+      const INPUT_TRANSFORM=${JSON.stringify(INPUT_TRANSFORM)};
       let runtime,inputId=0,inputResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[];
       const pressedKeys=new Set();
       const decoder=new TextDecoder();
@@ -654,10 +720,11 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
           runtime.globals.set('_pystudio_take_quit',()=>{const value=quitRequested;quitRequested=false;return value});
           runtime.globals.set('_pystudio_turtle_take_click',()=>turtleClicks.shift()||null);
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
-          send('executing');await runtime.runPythonAsync(GUI_SHIMS);
-          let prepared=source.replace(/\\binput\\s*\\(/g,'await __pystudio_input(').replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          send('executing');await runtime.runPythonAsync(GUI_SHIMS);await runtime.runPythonAsync(INPUT_TRANSFORM);
+          let prepared=source.replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
-          await runtime.runPythonAsync(prepared,{filename:'main.py'});flush();send('done');
+          runtime.globals.set('__pystudio_source',prepared);
+          await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});flush();send('done');
         }catch(error){flush();send('error',{message:String(error?.message||error)})}
       }
       onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true;if(m.type==='turtle-click')turtleClicks.push([Number(m.x),Number(m.y)])};`;
