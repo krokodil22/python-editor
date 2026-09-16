@@ -184,6 +184,10 @@ print("Удвоенное значение:", number * 2)`;
   function renderTurtleEvent(event){
     if(!interfaceCanvas?.isConnected)return;
     if(event.kind==='turtle-display'){interfaceContext=interfaceCanvas.getContext('2d');revealInterface();return}
+    // Module-level turtle commands do not create a Screen explicitly. Show the
+    // canvas as soon as the first drawing command arrives so `from turtle
+    // import *` programs are visible too.
+    revealInterface();
     const context=interfaceContext||interfaceCanvas.getContext('2d');
     const point=(x,y)=>[interfaceCanvas.width/2+x,interfaceCanvas.height/2-y];
     context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.fill||event.color||'#111827';context.lineWidth=event.width||2;
