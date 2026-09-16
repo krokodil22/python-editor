@@ -27,7 +27,7 @@ print("Удвоенное значение:", number * 2)`;
     fontSize.value=size;layout.style.setProperty('--code-size',size+'px');layout.style.setProperty('--code-leading',Math.round(Number(size)*1.55)+'px');localStorage.pyStudioFontSize=size;
   }
   function setStacked(value){
-    layout.classList.toggle('stacked',value);layoutToggle.setAttribute('aria-pressed',String(value));layoutToggle.textContent=value?'⇆ вид':'↕ вид';layoutToggle.title=value?'Расположить редактор и консоль рядом':'Расположить редактор над консолью';localStorage.pyStudioStacked=String(value);
+    layout.classList.toggle('stacked',value);layoutToggle.setAttribute('aria-pressed',String(value));layoutToggle.textContent=value?'⇆ Вид':'↕ Вид';layoutToggle.title=value?'Расположить редактор и консоль рядом':'Расположить редактор над консолью';localStorage.pyStudioStacked=String(value);
   }
   setFontSize(localStorage.pyStudioFontSize||'14');setStacked(localStorage.pyStudioStacked==='true');
   fontSize.addEventListener('change',event=>setFontSize(event.target.value));layoutToggle.addEventListener('click',()=>setStacked(!layout.classList.contains('stacked')));
