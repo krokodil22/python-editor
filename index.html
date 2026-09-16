@@ -168,7 +168,10 @@ print("Удвоенное значение:", number * 2)`;
     if(event.kind==='turtle-fill'){event.points.forEach(([x,y],index)=>index?context.lineTo(...point(x,y)):context.moveTo(...point(x,y)));context.closePath();context.fill();context.stroke()}
   }
   const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
-def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}))
+def _json_default(value):
+ if callable(value): return None
+ return str(value)
+def _event(kind, **data): __pystudio_gui_event(json.dumps({'kind':kind, **data}, default=_json_default))
 
 # Browser implementations of the common educational tkinter API.
 tk=types.ModuleType('tkinter'); tk.END='end'; tk.LEFT='left'; tk.RIGHT='right'; tk.TOP='top'; tk.BOTTOM='bottom'
