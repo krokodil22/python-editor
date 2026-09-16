@@ -242,7 +242,7 @@ print("Удвоенное значение:", number * 2)`;
     turtleQueue=turtleQueue.then(()=>drawTurtleEvent(event));
     return turtleQueue;
   }
-  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, time as _pystudio_time, types
+  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, time, types
 def _json_default(value):
  if callable(value): return None
  return str(value)
@@ -501,17 +501,17 @@ class _PressedKeys:
  def __iter__(self): return iter([False]*len(self))
 def _get_pressed_keys(): return _PressedKeys()
 class Clock:
- def __init__(self): self._last_tick=_pystudio_time.monotonic(); self._fps=0.
- def tick(self,fps=0):
-  now=_pystudio_time.monotonic(); elapsed=now-self._last_tick
+ def __init__(self): self._last_tick=time.monotonic(); self._fps=0.
+ async def tick(self,fps=0):
+  now=time.monotonic(); elapsed=now-self._last_tick
   target=1/float(fps) if fps else 0.
-  if elapsed<target: _pystudio_time.sleep(target-elapsed)
-  finished=_pystudio_time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
+  if elapsed<target: await asyncio.sleep(target-elapsed)
+  finished=time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
   if frame_time>0: self._fps=1/frame_time
   return int(frame_time*1000)
  def get_fps(self): return self._fps
-def _wait(ms):
- _pystudio_time.sleep(max(0,float(ms))/1000)
+async def _wait(ms):
+ await asyncio.sleep(max(0,float(ms))/1000)
  return int(ms)
 class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
@@ -682,7 +682,7 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
   const INPUT_TRANSFORM=String.raw`import ast, inspect
 
 def _pystudio_prepare_input(source):
-    """Compile input() calls so browser prompts can be awaited everywhere."""
+    """Compile browser calls so prompts and frame delays can yield to JavaScript."""
     tree = ast.parse(source, filename='main.py')
     functions = [node for node in ast.walk(tree)
                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
@@ -699,7 +699,9 @@ def _pystudio_prepare_input(source):
                               (call.id == 'input' or call.id in async_names)
                               for call in calls)
             needs_async = needs_async or any(isinstance(call, ast.Attribute) and
-                                              call.attr in async_names for call in calls)
+                                              (call.attr in async_names or
+                                               call.attr in ('tick', 'wait', 'delay'))
+                                              for call in calls)
             if needs_async and function.name not in async_names:
                 async_names.add(function.name)
                 changed = True
@@ -728,7 +730,9 @@ def _pystudio_prepare_input(source):
             self.generic_visit(node)
             is_input = isinstance(node.func, ast.Name) and node.func.id == 'input'
             is_async_call = ((isinstance(node.func, ast.Name) and node.func.id in async_names) or
-                             (isinstance(node.func, ast.Attribute) and node.func.attr in async_names))
+                             (isinstance(node.func, ast.Attribute) and
+                              (node.func.attr in async_names or
+                               node.func.attr in ('tick', 'wait', 'delay'))))
             if is_input:
                 node.func = ast.copy_location(ast.Name(id='__pystudio_input', ctx=ast.Load()), node.func)
             if (is_input or is_async_call) and not self.inside_await:
@@ -847,7 +851,7 @@ async def __pystudio_run(source):
           runtime.globals.set('_pystudio_turtle_take_click',()=>turtleClicks.shift()||null);
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);await runtime.runPythonAsync(INPUT_TRANSFORM);
-          let prepared=source.replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          let prepared=source;
           if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           runtime.globals.set('__pystudio_source',prepared);
           await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});flush();send('done');
