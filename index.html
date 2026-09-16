@@ -192,6 +192,10 @@ print("Удвоенное значение:", number * 2)`;
     if(event.kind==='turtle-circle'){context.arc(...point(event.x,event.y-event.r),Math.abs(event.r),0,Math.PI*2);context.stroke()}
     if(event.kind==='turtle-dot'){context.arc(...point(event.x,event.y),Math.abs(event.size)/2,0,Math.PI*2);context.fill()}
     if(event.kind==='turtle-fill'){event.points.forEach(([x,y],index)=>index?context.lineTo(...point(x,y)):context.moveTo(...point(x,y)));context.closePath();context.fill();context.stroke()}
+    if(event.kind==='turtle-write'){
+      const [x,y]=point(event.x,event.y);context.font=`${event.fontStyle} ${event.fontSize}px ${event.fontFamily}`;
+      context.textAlign=event.align;context.textBaseline='alphabetic';context.fillText(event.text,x,y);
+    }
   }
   const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
 def _json_default(value):
@@ -286,6 +290,13 @@ def pensize(value):
  global _width; _width=float(value)
 def circle(radius): _event('turtle-circle',x=_tx,y=_ty,r=float(radius),color=_color,width=_width)
 def dot(size=None,*colors): _event('turtle-dot',x=_tx,y=_ty,size=float(size or max(_width+4,_width*2)),color=str(colors[0] if colors else _color))
+def write(arg,move=False,align='left',font=('Arial',8,'normal')):
+ try: family,size,style=font
+ except (TypeError,ValueError): family,size,style='Arial',8,'normal'
+ alignment={'center':'center','right':'right'}.get(str(align).lower(),'left')
+ font_style='italic' if 'italic' in str(style).lower() else 'normal'
+ font_weight='bold' if 'bold' in str(style).lower() else 'normal'
+ _event('turtle-write',x=_tx,y=_ty,text=str(arg),color=_color,align=alignment,fontFamily=str(family),fontSize=float(size),fontStyle=font_style+' '+font_weight)
 def begin_fill():
  global _filling,_fill_points; _filling=True; _fill_points=[(_tx,_ty)]
 def end_fill():
@@ -313,8 +324,8 @@ class Turtle:
  forward=staticmethod(forward); fd=staticmethod(forward); backward=staticmethod(backward); bk=staticmethod(backward)
  left=staticmethod(left); lt=staticmethod(left); right=staticmethod(right); rt=staticmethod(right); goto=staticmethod(goto)
  penup=staticmethod(penup); up=staticmethod(penup); pendown=staticmethod(pendown); down=staticmethod(pendown)
- pencolor=staticmethod(pencolor); fillcolor=staticmethod(fillcolor); color=staticmethod(color); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle); dot=staticmethod(dot)
-for _n in ('forward','backward','left','right','goto','penup','pendown','pencolor','fillcolor','color','pensize','circle','dot','begin_fill','end_fill','clear','hideturtle','speed','done','mainloop','Screen'): setattr(turtle,_n,globals()[_n])
+ pencolor=staticmethod(pencolor); fillcolor=staticmethod(fillcolor); color=staticmethod(color); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle); dot=staticmethod(dot); write=staticmethod(write)
+for _n in ('forward','backward','left','right','goto','penup','pendown','pencolor','fillcolor','color','pensize','circle','dot','write','begin_fill','end_fill','clear','hideturtle','speed','done','mainloop','Screen'): setattr(turtle,_n,globals()[_n])
 turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.up=penup; turtle.down=pendown; turtle.Turtle=Turtle
 sys.modules['turtle']=turtle
 
