@@ -201,7 +201,7 @@ print("Удвоенное значение:", number * 2)`;
       context.textAlign=event.align;context.textBaseline='alphabetic';context.fillText(event.text,x,y);
     }
   }
-  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
+  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, time as _pystudio_time, types
 def _json_default(value):
  if callable(value): return None
  return str(value)
@@ -453,13 +453,17 @@ class _PressedKeys:
  def __iter__(self): return iter([False]*len(self))
 def _get_pressed_keys(): return _PressedKeys()
 class Clock:
- async def tick(self,fps=0):
-  delay=1/fps if fps else 0
-  if delay: await asyncio.sleep(delay)
-  return int(delay*1000)
- def get_fps(self): return 0.
-async def _wait(ms):
- await asyncio.sleep(max(0,float(ms))/1000)
+ def __init__(self): self._last_tick=_pystudio_time.monotonic(); self._fps=0.
+ def tick(self,fps=0):
+  now=_pystudio_time.monotonic(); elapsed=now-self._last_tick
+  target=1/float(fps) if fps else 0.
+  if elapsed<target: _pystudio_time.sleep(target-elapsed)
+  finished=_pystudio_time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
+  if frame_time>0: self._fps=1/frame_time
+  return int(frame_time*1000)
+ def get_fps(self): return self._fps
+def _wait(ms):
+ _pystudio_time.sleep(max(0,float(ms))/1000)
  return int(ms)
 class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
