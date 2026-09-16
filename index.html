@@ -502,16 +502,18 @@ class _PressedKeys:
 def _get_pressed_keys(): return _PressedKeys()
 class Clock:
  def __init__(self): self._last_tick=_pystudio_time.monotonic(); self._fps=0.
- def tick(self,fps=0):
+ async def tick(self,fps=0):
   now=_pystudio_time.monotonic(); elapsed=now-self._last_tick
   target=1/float(fps) if fps else 0.
-  if elapsed<target: _pystudio_time.sleep(target-elapsed)
+  # Yield to the Web Worker event loop on every frame. Besides limiting the
+  # frame rate, this lets browser keydown/keyup messages reach pressedKeys.
+  await asyncio.sleep(max(0.,target-elapsed))
   finished=_pystudio_time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
   if frame_time>0: self._fps=1/frame_time
   return int(frame_time*1000)
  def get_fps(self): return self._fps
-def _wait(ms):
- _pystudio_time.sleep(max(0,float(ms))/1000)
+async def _wait(ms):
+ await asyncio.sleep(max(0,float(ms))/1000)
  return int(ms)
 class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
