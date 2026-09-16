@@ -242,7 +242,7 @@ print("Удвоенное значение:", number * 2)`;
     turtleQueue=turtleQueue.then(()=>drawTurtleEvent(event));
     return turtleQueue;
   }
-  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, time, types
+  const GUI_SHIMS=String.raw`import asyncio, json, math, sys, time as _pystudio_time, types
 def _json_default(value):
  if callable(value): return None
  return str(value)
@@ -501,17 +501,17 @@ class _PressedKeys:
  def __iter__(self): return iter([False]*len(self))
 def _get_pressed_keys(): return _PressedKeys()
 class Clock:
- def __init__(self): self._last_tick=time.monotonic(); self._fps=0.
+ def __init__(self): self._last_tick=_pystudio_time.monotonic(); self._fps=0.
  def tick(self,fps=0):
-  now=time.monotonic(); elapsed=now-self._last_tick
+  now=_pystudio_time.monotonic(); elapsed=now-self._last_tick
   target=1/float(fps) if fps else 0.
-  if elapsed<target: time.sleep(target-elapsed)
-  finished=time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
+  if elapsed<target: _pystudio_time.sleep(target-elapsed)
+  finished=_pystudio_time.monotonic(); frame_time=finished-self._last_tick; self._last_tick=finished
   if frame_time>0: self._fps=1/frame_time
   return int(frame_time*1000)
  def get_fps(self): return self._fps
 def _wait(ms):
- time.sleep(max(0,float(ms))/1000)
+ _pystudio_time.sleep(max(0,float(ms))/1000)
  return int(ms)
 class Font:
  def __init__(self,name=None,size=24): self.size=int(size)
