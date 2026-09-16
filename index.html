@@ -684,11 +684,16 @@ for _pkg in ('PyQt5','PyQt6','pyqt'):
   const INPUT_TRANSFORM=String.raw`import ast, inspect
 
 def _pystudio_prepare_input(source):
-    """Compile input() calls so browser prompts can be awaited everywhere."""
+    """Compile browser-backed blocking calls so they can be awaited everywhere."""
     tree = ast.parse(source, filename='main.py')
     functions = [node for node in ast.walk(tree)
                  if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))]
     async_names = set()
+
+    def is_browser_async_call(call):
+        return (isinstance(call, ast.Name) and call.id == 'input') or \
+               (isinstance(call, ast.Attribute) and
+                call.attr in {'tick', 'wait', 'delay'})
 
     # Include both functions using input directly and helpers which call them.
     changed = True
@@ -697,8 +702,9 @@ def _pystudio_prepare_input(source):
         for function in functions:
             calls = [node.func for node in ast.walk(function) if isinstance(node, ast.Call)]
             needs_async = any(isinstance(node, ast.Await) for node in ast.walk(function))
-            needs_async = needs_async or any(isinstance(call, ast.Name) and
-                              (call.id == 'input' or call.id in async_names)
+            needs_async = needs_async or any((isinstance(call, ast.Name) and
+                                              call.id in async_names) or
+                                             is_browser_async_call(call)
                               for call in calls)
             needs_async = needs_async or any(isinstance(call, ast.Attribute) and
                                               call.attr in async_names for call in calls)
@@ -730,7 +736,8 @@ def _pystudio_prepare_input(source):
             self.generic_visit(node)
             is_input = isinstance(node.func, ast.Name) and node.func.id == 'input'
             is_async_call = ((isinstance(node.func, ast.Name) and node.func.id in async_names) or
-                             (isinstance(node.func, ast.Attribute) and node.func.attr in async_names))
+                             (isinstance(node.func, ast.Attribute) and node.func.attr in async_names) or
+                             is_browser_async_call(node.func))
             if is_input:
                 node.func = ast.copy_location(ast.Name(id='__pystudio_input', ctx=ast.Load()), node.func)
             if (is_input or is_async_call) and not self.inside_await:
@@ -849,7 +856,7 @@ async def __pystudio_run(source):
           runtime.globals.set('_pystudio_turtle_take_click',()=>turtleClicks.shift()||null);
           runtime.globals.set('__pystudio_input',prompt=>new Promise(resolve=>{const id=++inputId;inputResolvers.set(id,resolve);send('input',{id,prompt:String(prompt||'')})}));
           send('executing');await runtime.runPythonAsync(GUI_SHIMS);await runtime.runPythonAsync(INPUT_TRANSFORM);
-          let prepared=source.replace(/^(\\s*)([A-Za-z_]\\w*\\.(?:tick|wait|delay)\\([^\\n]*\\))\\s*$/gm,'$1await $2');
+          let prepared=source;
           if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           runtime.globals.set('__pystudio_source',prepared);
           await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});flush();send('done');
