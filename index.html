@@ -129,11 +129,14 @@ print("Удвоенное значение:", number * 2)`;
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
   let interfaceStage,interfaceCanvas,interfaceContext,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
+  let turtleCanvas,turtleContext,turtleQueue=Promise.resolve(),turtleSpeed=3,turtleAnimationId=0,turtleCursor={x:0,y:0,heading:0,visible:true};
   function prepareInterface(){
     guiEvents=[];
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
     interfaceCanvas=document.createElement('canvas');interfaceCanvas.width=640;interfaceCanvas.height=400;interfaceCanvas.id='canvas';
     interfaceStage.append(interfaceCanvas);out.append(interfaceStage);
+    turtleCanvas=document.createElement('canvas');turtleCanvas.width=interfaceCanvas.width;turtleCanvas.height=interfaceCanvas.height;
+    turtleContext=turtleCanvas.getContext('2d');turtleQueue=Promise.resolve();turtleSpeed=3;turtleAnimationId++;turtleCursor={x:0,y:0,heading:0,visible:true};
   }
   function revealInterface(){
     Array.from(out.children).forEach(child=>{if(child!==interfaceStage)child.remove()});
@@ -181,25 +184,63 @@ print("Удвоенное значение:", number * 2)`;
       const frame=pygameFrame;pygameFrame=[];paintPygameFrame(frame,++pygameFrameId);
     }else if(!event.kind.startsWith('pygame-audio')&&!['pygame-sound','pygame-music'].includes(event.kind))pygameFrame.push(event);
   }
-  function renderTurtleEvent(event){
+  function paintTurtleCursor(preview){
+    if(!interfaceCanvas?.isConnected||!turtleContext)return;
+    const context=interfaceCanvas.getContext('2d'),point=(x,y)=>[interfaceCanvas.width/2+x,interfaceCanvas.height/2-y];
+    context.clearRect(0,0,interfaceCanvas.width,interfaceCanvas.height);context.drawImage(turtleCanvas,0,0);
+    if(preview){context.beginPath();context.strokeStyle=preview.color;context.lineWidth=preview.width;context.moveTo(...point(...preview.from));context.lineTo(...point(...preview.to));context.stroke()}
+    if(!turtleCursor.visible)return;
+    const [x,y]=point(turtleCursor.x,turtleCursor.y),angle=-turtleCursor.heading*Math.PI/180;
+    context.save();context.translate(x,y);context.rotate(angle);context.beginPath();context.moveTo(11,0);context.lineTo(-7,-6);context.lineTo(-4,0);context.lineTo(-7,6);context.closePath();context.fillStyle='#22c55e';context.strokeStyle='#166534';context.lineWidth=1.5;context.fill();context.stroke();context.restore();
+  }
+  const turtleFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+  async function drawTurtleEvent(event){
     if(!interfaceCanvas?.isConnected)return;
-    if(event.kind==='turtle-display'){interfaceContext=interfaceCanvas.getContext('2d');revealInterface();return}
+    const animationId=turtleAnimationId;
+    if(event.kind==='turtle-display'){interfaceContext=interfaceCanvas.getContext('2d');revealInterface();paintTurtleCursor();return}
     // Module-level turtle commands do not create a Screen explicitly. Show the
     // canvas as soon as the first drawing command arrives so `from turtle
     // import *` programs are visible too.
     revealInterface();
-    const context=interfaceContext||interfaceCanvas.getContext('2d');
+    const context=turtleContext;
     const point=(x,y)=>[interfaceCanvas.width/2+x,interfaceCanvas.height/2-y];
+    if(event.kind==='turtle-speed'){turtleSpeed=event.value;return}
+    if(event.kind==='turtle-hide'){turtleCursor.visible=false;paintTurtleCursor();return}
+    if(event.kind==='turtle-show'){turtleCursor.visible=true;paintTurtleCursor();return}
+    if(event.kind==='turtle-position'){turtleCursor.x=event.x;turtleCursor.y=event.y;turtleCursor.heading=event.heading;paintTurtleCursor();return}
+    if(event.kind==='turtle-turn'){turtleCursor.heading=event.heading;paintTurtleCursor();return}
+    if(event.kind==='turtle-path'){
+      const points=event.points||[],draw=event.draw!==false,speed=turtleSpeed;
+      if(points.length<2)return;
+      for(let index=1;index<points.length;index++){
+        const from=points[index-1],to=points[index],dx=to[0]-from[0],dy=to[1]-from[1],distance=Math.hypot(dx,dy);
+        const duration=speed===0?0:Math.min(900,distance/(60+speed*45)*1000),started=performance.now();
+        do{
+          if(animationId!==turtleAnimationId)return;
+          const progress=duration?Math.min(1,(performance.now()-started)/duration):1;
+          const current=[from[0]+dx*progress,from[1]+dy*progress];turtleCursor.x=current[0];turtleCursor.y=current[1];
+          if(distance)turtleCursor.heading=Math.atan2(dy,dx)*180/Math.PI;
+          paintTurtleCursor(draw?{from,to:current,color:event.color||'#111827',width:event.width||2}:null);
+          if(progress>=1)break;await turtleFrame();
+        }while(true);
+        if(draw){context.beginPath();context.strokeStyle=event.color||'#111827';context.lineWidth=event.width||2;context.moveTo(...point(...from));context.lineTo(...point(...to));context.stroke()}
+      }
+      if(event.heading!==undefined)turtleCursor.heading=event.heading;
+      paintTurtleCursor();return;
+    }
     context.beginPath();context.strokeStyle=event.color||'#111827';context.fillStyle=event.fill||event.color||'#111827';context.lineWidth=event.width||2;
-    if(event.kind==='turtle-clear')context.clearRect(0,0,interfaceCanvas.width,interfaceCanvas.height);
-    if(event.kind==='turtle-line'){context.moveTo(...point(event.x1,event.y1));context.lineTo(...point(event.x2,event.y2));context.stroke()}
-    if(event.kind==='turtle-path'){event.points.forEach(([x,y],index)=>index?context.lineTo(...point(x,y)):context.moveTo(...point(x,y)));context.stroke()}
+    if(event.kind==='turtle-clear')context.clearRect(0,0,turtleCanvas.width,turtleCanvas.height);
     if(event.kind==='turtle-dot'){context.arc(...point(event.x,event.y),Math.abs(event.size)/2,0,Math.PI*2);context.fill()}
     if(event.kind==='turtle-fill'){event.points.forEach(([x,y],index)=>index?context.lineTo(...point(x,y)):context.moveTo(...point(x,y)));context.closePath();context.fill();context.stroke()}
     if(event.kind==='turtle-write'){
       const [x,y]=point(event.x,event.y);context.font=`${event.fontStyle} ${event.fontSize}px ${event.fontFamily}`;
       context.textAlign=event.align;context.textBaseline='alphabetic';context.fillText(event.text,x,y);
     }
+    paintTurtleCursor();
+  }
+  function renderTurtleEvent(event){
+    turtleQueue=turtleQueue.then(()=>drawTurtleEvent(event));
+    return turtleQueue;
   }
   const GUI_SHIMS=String.raw`import asyncio, json, math, sys, types
 def _json_default(value):
@@ -258,25 +299,25 @@ for _name in ('commondialog','constants','dialog','dnd','tix'):
 sys.modules['tkinter']=tk
 
 # turtle records drawing commands for the browser canvas.
-turtle=types.ModuleType('turtle'); _tx=_ty=0.; _angle=0.; _pen=True; _color='black'; _fill='black'; _width=2; _filling=False; _fill_points=[]; _click_handler=None
+turtle=types.ModuleType('turtle'); _tx=_ty=0.; _angle=0.; _pen=True; _color='black'; _fill='black'; _width=2; _speed=3; _filling=False; _fill_points=[]; _click_handler=None
 def forward(n):
  global _tx,_ty
  nx=_tx+float(n)*math.cos(math.radians(_angle)); ny=_ty+float(n)*math.sin(math.radians(_angle))
- if _pen: _event('turtle-line',x1=_tx,y1=_ty,x2=nx,y2=ny,color=_color,width=_width)
+ _event('turtle-path',points=[(_tx,_ty),(nx,ny)],draw=_pen,color=_color,width=_width,heading=_angle%360)
  _tx,_ty=nx,ny
  if _filling: _fill_points.append((_tx,_ty))
 def backward(n): forward(-n)
 def left(n):
- global _angle; _angle+=float(n)
+ global _angle; _angle+=float(n); _event('turtle-turn',heading=_angle%360)
 def right(n):
- global _angle; _angle-=float(n)
+ global _angle; _angle-=float(n); _event('turtle-turn',heading=_angle%360)
 def setheading(angle):
- global _angle; _angle=float(angle)%360
+ global _angle; _angle=float(angle)%360; _event('turtle-turn',heading=_angle)
 def heading(): return _angle%360
 def goto(x,y):
  global _tx,_ty,_fill_points
  ox,oy=_tx,_ty; _tx,_ty=float(x),float(y)
- if _pen: _event('turtle-line',x1=ox,y1=oy,x2=_tx,y2=_ty,color=_color,width=_width)
+ _event('turtle-path',points=[(ox,oy),(_tx,_ty)],draw=_pen,color=_color,width=_width,heading=_angle%360)
  if _filling: _fill_points.append((_tx,_ty))
 def penup():
  global _pen; _pen=False
@@ -315,7 +356,7 @@ def circle(radius,extent=None,steps=None):
  for index in range(1,count+1):
   angle=start_angle+math.radians(sweep)*index/count
   points.append((cx+abs(radius)*math.cos(angle),cy+abs(radius)*math.sin(angle)))
- if _pen: _event('turtle-path',points=points,color=_color,width=_width)
+ _event('turtle-path',points=points,draw=_pen,color=_color,width=_width,heading=(_angle+sweep)%360)
  _tx,_ty=points[-1]; _angle=(_angle+sweep)%360
  if _filling: _fill_points.extend(points[1:])
 def dot(size=None,*colors): _event('turtle-dot',x=_tx,y=_ty,size=float(size or max(_width+4,_width*2)),color=str(colors[0] if colors else _color))
@@ -334,10 +375,17 @@ def end_fill():
  _filling=False
 def clear(): _event('turtle-clear')
 def reset():
- global _tx,_ty,_angle,_pen,_color,_fill,_width,_filling,_fill_points
- clear(); _tx=_ty=_angle=0.; _pen=True; _color=_fill='black'; _width=2; _filling=False; _fill_points=[]
-def hideturtle(): pass
-def speed(value=None): return 0
+ global _tx,_ty,_angle,_pen,_color,_fill,_width,_speed,_filling,_fill_points
+ clear(); _tx=_ty=_angle=0.; _pen=True; _color=_fill='black'; _width=2; _speed=3; _filling=False; _fill_points=[]; _event('turtle-position',x=0,y=0,heading=0); _event('turtle-show')
+def hideturtle(): _event('turtle-hide')
+def showturtle(): _event('turtle-show')
+def speed(value=None):
+ global _speed
+ if value is None: return _speed
+ names={'fastest':0,'fast':10,'normal':6,'slow':3,'slowest':1}; value=names.get(str(value).lower(),value)
+ try: value=int(value)
+ except (TypeError,ValueError): value=0
+ _speed=0 if value<0 or value>10 else value; _event('turtle-speed',value=_speed); return _speed
 class _Screen:
  def __init__(self): _event('turtle-display')
  def title(self,value): _event('title',value=str(value))
@@ -357,9 +405,9 @@ class Turtle:
  left=staticmethod(left); lt=staticmethod(left); right=staticmethod(right); rt=staticmethod(right); goto=staticmethod(goto); setheading=staticmethod(setheading); seth=staticmethod(setheading); heading=staticmethod(heading)
  penup=staticmethod(penup); up=staticmethod(penup); pendown=staticmethod(pendown); down=staticmethod(pendown)
  pencolor=staticmethod(pencolor); fillcolor=staticmethod(fillcolor); color=staticmethod(color); pensize=staticmethod(pensize); width=staticmethod(pensize); circle=staticmethod(circle); dot=staticmethod(dot); write=staticmethod(write)
- begin_fill=staticmethod(begin_fill); end_fill=staticmethod(end_fill); position=staticmethod(position); pos=staticmethod(position); xcor=staticmethod(xcor); ycor=staticmethod(ycor); home=staticmethod(home); clear=staticmethod(clear); reset=staticmethod(reset)
-for _n in ('forward','backward','left','right','setheading','heading','goto','position','xcor','ycor','home','penup','pendown','pencolor','fillcolor','color','pensize','circle','dot','write','begin_fill','end_fill','clear','reset','hideturtle','speed','done','mainloop','Screen'): setattr(turtle,_n,globals()[_n])
-turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.seth=setheading; turtle.pos=position; turtle.up=penup; turtle.down=pendown; turtle.width=pensize; turtle.Turtle=Turtle
+ begin_fill=staticmethod(begin_fill); end_fill=staticmethod(end_fill); position=staticmethod(position); pos=staticmethod(position); xcor=staticmethod(xcor); ycor=staticmethod(ycor); home=staticmethod(home); clear=staticmethod(clear); reset=staticmethod(reset); hideturtle=staticmethod(hideturtle); ht=staticmethod(hideturtle); showturtle=staticmethod(showturtle); st=staticmethod(showturtle); speed=staticmethod(speed)
+for _n in ('forward','backward','left','right','setheading','heading','goto','position','xcor','ycor','home','penup','pendown','pencolor','fillcolor','color','pensize','circle','dot','write','begin_fill','end_fill','clear','reset','hideturtle','showturtle','speed','done','mainloop','Screen'): setattr(turtle,_n,globals()[_n])
+turtle.fd=forward; turtle.bk=backward; turtle.lt=left; turtle.rt=right; turtle.seth=setheading; turtle.pos=position; turtle.up=penup; turtle.down=pendown; turtle.width=pensize; turtle.ht=hideturtle; turtle.st=showturtle; turtle.Turtle=Turtle
 sys.modules['turtle']=turtle
 
 # pygame-ce cannot open an SDL window inside a Web Worker.  This small compatible
@@ -744,6 +792,7 @@ async def __pystudio_run(source):
   }
   function stop(reason='Выполнение остановлено пользователем.'){
     if(!isRunning)return;
+    turtleAnimationId++;
     worker?.terminate();worker=undefined;clearTimeout(loadTimer);
     if(pendingInput){pendingInput.input.disabled=true;pendingInput=undefined}
     activeAudio.forEach(audio=>audio.pause());activeAudio=[];
@@ -811,7 +860,7 @@ async def __pystudio_run(source):
     const instance=createPythonWorker();worker=instance;
     loadTimer=setTimeout(()=>stop('Не удалось загрузить Python за 60 секунд.'),60000);
     instance.onerror=event=>{event.preventDefault();stop('Ошибка изолированного Python-процесса. Попробуйте запустить программу снова.')};
-    instance.onmessage=event=>{
+    instance.onmessage=async event=>{
       if(instance!==worker)return;
       const message=event.data;
       if(message.type==='status')setState('running',message.label);
@@ -832,7 +881,7 @@ async def __pystudio_run(source):
         requestConsoleInput(message.prompt).then(value=>{if(instance===worker)instance.postMessage({type:'input',id:message.id,value})});
       }
       if(message.type==='done'){
-        clearTimeout(loadTimer);showInterface();setState('done','Завершено');setRunning(false);instance.terminate();worker=undefined;
+        clearTimeout(loadTimer);await turtleQueue;if(instance!==worker)return;showInterface();setState('done','Завершено');setRunning(false);instance.terminate();worker=undefined;
       }
       if(message.type==='error'){
         clearTimeout(loadTimer);interfaceStage?.remove();out.classList.remove('interface');writePython(formatPythonError({message:message.message}),'error');setState('','Ошибка');setRunning(false);instance.terminate();worker=undefined;
