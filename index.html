@@ -934,7 +934,10 @@ async def __pystudio_run(source):
           let prepared=source;
           if(/(?:from\\s+turtle\\s+import|import\\s+turtle)/.test(source))prepared=prepared.replace(/^(\\s*)([A-Za-z_]\\w*\\.mainloop\\([^\\n]*\\))\\s*$/gm,'$1await $2');
           runtime.globals.set('__pystudio_source',prepared);
-          await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});flush();sendMediaFiles();send('done');
+          await runtime.runPythonAsync('await __pystudio_run(__pystudio_source)',{filename:'main.py'});
+          // A print() without a trailing newline may still be held by Python's
+          // TextIOWrapper, so flush Python before draining the worker buffer.
+          runtime.runPython('import sys; sys.stdout.flush()');flush();sendMediaFiles();send('done');
         }catch(error){flush();if(runtime)sendMediaFiles();send('error',{message:String(error?.message||error)})}
       }
       onmessage=event=>{const m=event.data;if(m.type==='run')run(m.source,m.files);if(m.type==='input'){const resolve=inputResolvers.get(m.id);if(resolve){inputResolvers.delete(m.id);resolve(m.value)}}if(m.type==='messagebox'){const resolve=messageboxResolvers.get(m.id);if(resolve){messageboxResolvers.delete(m.id);resolve(m.value)}}if(m.type==='tk-event')tkEvents.push(m.event);if(m.type==='key'){m.down?pressedKeys.add(Number(m.key)):pressedKeys.delete(Number(m.key))}if(m.type==='quit')quitRequested=true;if(m.type==='turtle-click')turtleClicks.push([Number(m.x),Number(m.y)])};`;
