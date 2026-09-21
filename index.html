@@ -903,7 +903,7 @@ async def __pystudio_run(source):
   }
   function setRunning(value){
     isRunning=value;runButton.classList.toggle('stop',value);
-    runButton.textContent=value?'■ Остановить':'▶ Запустить';
+    runButton.textContent=value?'■ Стоп':'▶ Запустить';
   }
   function stop(reason='Выполнение остановлено пользователем.'){
     if(!isRunning)return;
