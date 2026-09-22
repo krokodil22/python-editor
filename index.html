@@ -491,7 +491,7 @@ sys.modules['turtle']=turtle
 
 # pygame-ce cannot open an SDL window inside a Web Worker.  This small compatible
 # module sends the usual display/draw calls to the browser canvas instead.
-pygame=types.ModuleType('pygame'); pygame.QUIT=256; pygame.KEYDOWN=768; pygame.K_ESCAPE=27
+pygame=types.ModuleType('pygame'); pygame.QUIT=256; pygame.KEYDOWN=768; pygame.K_ESCAPE=27; pygame.K_SPACE=32; pygame.K_r=114
 pygame.K_LEFT=1073741904; pygame.K_RIGHT=1073741903; pygame.K_UP=1073741906; pygame.K_DOWN=1073741905
 class Rect:
  def __init__(self,*args):
@@ -717,8 +717,8 @@ for _module_name in ('base','bufferproxy','camera','color','constants','cursors'
  if not hasattr(pygame,_module_name): _pg_module(_module_name)
 pygame.Surface=Surface; pygame.Rect=Rect; pygame.Color=_pg_color; pygame.init=lambda:(1,0); pygame.quit=lambda:None
 pygame.locals=types.ModuleType('pygame.locals')
-for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
-pygame.__all__=['display','draw','event','key','time','font','image','sprite','mixer','transform','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_LEFT','K_RIGHT','K_UP','K_DOWN']
+for _name in ('QUIT','KEYDOWN','K_ESCAPE','K_SPACE','K_r','K_LEFT','K_RIGHT','K_UP','K_DOWN'): setattr(pygame.locals,_name,getattr(pygame,_name))
+pygame.__all__=['display','draw','event','key','time','font','image','sprite','mixer','transform','Surface','Rect','Color','init','quit','QUIT','KEYDOWN','K_ESCAPE','K_SPACE','K_r','K_LEFT','K_RIGHT','K_UP','K_DOWN']
 sys.modules['pygame']=pygame; sys.modules['pygame.locals']=pygame.locals; sys.modules['pygame.image']=pygame.image
 
 # PyQt5, PyQt6 and the pyqt alias share lightweight browser widgets.
@@ -1073,9 +1073,9 @@ async def __pystudio_run(source):
       instance.terminate();if(instance===worker)worker=undefined;clearTimeout(loadTimer);setRunning(false);showError(error);
     }
   }
-  const pygameKeys={ArrowLeft:1073741904,ArrowRight:1073741903,ArrowUp:1073741906,ArrowDown:1073741905};
+  const pygameKeys={ArrowLeft:1073741904,ArrowRight:1073741903,ArrowUp:1073741906,ArrowDown:1073741905,Space:32,KeyR:114};
   function sendPygameKey(event,down){
-    const pygameKey=pygameKeys[event.key];if(!isRunning||!pygameKey)return;
+    const pygameKey=pygameKeys[event.code];if(!isRunning||!pygameKey)return;
     event.preventDefault();worker?.postMessage({type:'key',key:pygameKey,down});
   }
   runButton.onclick=run;
