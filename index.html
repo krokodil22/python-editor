@@ -144,6 +144,7 @@ print("Удвоенное значение:", number * 2)`;
   // the URL here because relative URLs inside the Blob worker use a blob: base.
   const PYODIDE_BASE_URL=new URL('./vendor/pyodide/',window.location.href).href;
   const PYODIDE_URL=new URL('pyodide.js',PYODIDE_BASE_URL).href;
+  const PYODIDE_CDN_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/';
   let worker,loadTimer,pendingInput,isRunning=false;
   const runButton=document.querySelector('#run');
   const MAX_SOURCE_SIZE=200000,MAX_OUTPUT_SIZE=100000;
@@ -920,6 +921,7 @@ async def __pystudio_run(source):
     const workerCode=`
       const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
       const PYODIDE_BASE_URL=${JSON.stringify(PYODIDE_BASE_URL)};
+      const PYODIDE_CDN_URL=${JSON.stringify(PYODIDE_CDN_URL)};
       const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
       const INPUT_TRANSFORM=${JSON.stringify(INPUT_TRANSFORM)};
       let runtime,inputId=0,inputResolvers=new Map(),messageboxId=0,messageboxResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[],tkEvents=[];
@@ -971,7 +973,24 @@ async def __pystudio_run(source):
         // user code runs; aliases cover the names beginners commonly try.
         if(/(^|[;\\n]\\s*)(?:from\\s+PIL(?:\\.|\\s)|import\\s+(?:PIL|pillow)\\b)/m.test(source)){
           send('status',{label:'Загрузка Pillow…'});
-          await runtime.loadPackage('pillow');
+          try{
+            await runtime.loadPackage('pillow');
+          }catch(localError){
+            // Some shared hosts serve the editor itself correctly but block
+            // .whl files. Keep the portable local bundle as the primary
+            // source, then retry the matching official Pyodide package CDN.
+            send('status',{label:'Загрузка Pillow с резервного сервера…'});
+            try{
+              const response=await fetch(new URL('pyodide-lock.json',PYODIDE_BASE_URL));
+              if(!response.ok)throw new Error('HTTP '+response.status);
+              const lock=await response.json();
+              const fileName=lock.packages?.pillow?.file_name;
+              if(!fileName)throw new Error('Pillow отсутствует в pyodide-lock.json');
+              await runtime.loadPackage(new URL(fileName,PYODIDE_CDN_URL).href);
+            }catch(cdnError){
+              throw new Error('Не удалось загрузить Pillow с сайта и резервного сервера. Проверьте, что хостинг разрешает файлы .whl и внешние HTTPS-запросы.\\nЛокальная ошибка: '+localError+'\\nРезервная ошибка: '+cdnError);
+            }
+          }
           await runtime.runPythonAsync("import PIL, sys; sys.modules.setdefault('pillow', PIL)");
         }
         if(/(^|[;\\n]\\s*)(?:from\\s+emoji(?:\\.|\\s)|import\\s+emoji\\b)/m.test(source)){
