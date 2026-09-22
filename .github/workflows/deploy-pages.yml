@@ -46,6 +46,16 @@ jobs:
           test -f _site/vendor/pyodide/python_stdlib.zip
           test -f _site/vendor/pyodide/pyodide-lock.json
           test -f _site/vendor/pyodide/emoji-2.14.1-py3-none-any.whl
+          python - <<'PYTHON'
+          import json
+          from pathlib import Path
+
+          root = Path('_site/vendor/pyodide')
+          lock = json.loads((root / 'pyodide-lock.json').read_text())
+          pillow = root / lock['packages']['pillow']['file_name']
+          if not pillow.is_file():
+              raise SystemExit(f'Pillow package is missing from the portable site: {pillow}')
+          PYTHON
 
       - name: Upload portable site archive
         uses: actions/upload-artifact@v4
