@@ -140,7 +140,10 @@ print("Удвоенное значение:", number * 2)`;
     Array.from(event.target.files).forEach(putAsset);
     renderAssets();event.target.value='';
   });
-  const PYODIDE_URL='https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js';
+  // GitHub Pages publishes the Pyodide distribution beside this file. Resolve
+  // the URL here because relative URLs inside the Blob worker use a blob: base.
+  const PYODIDE_BASE_URL=new URL('./vendor/pyodide/',window.location.href).href;
+  const PYODIDE_URL=new URL('pyodide.js',PYODIDE_BASE_URL).href;
   let worker,loadTimer,pendingInput,isRunning=false;
   const runButton=document.querySelector('#run');
   const MAX_SOURCE_SIZE=200000,MAX_OUTPUT_SIZE=100000;
@@ -916,6 +919,7 @@ async def __pystudio_run(source):
   function createPythonWorker(){
     const workerCode=`
       const PYODIDE_URL=${JSON.stringify(PYODIDE_URL)};
+      const PYODIDE_BASE_URL=${JSON.stringify(PYODIDE_BASE_URL)};
       const GUI_SHIMS=${JSON.stringify(GUI_SHIMS)};
       const INPUT_TRANSFORM=${JSON.stringify(INPUT_TRANSFORM)};
       let runtime,inputId=0,inputResolvers=new Map(),messageboxId=0,messageboxResolvers=new Map(),stdoutBuffer='',quitRequested=false,turtleClicks=[],tkEvents=[];
@@ -949,12 +953,12 @@ async def __pystudio_run(source):
           send('status',{label:'Загрузка emoji…'});
           await runtime.loadPackage('micropip');
           const micropip=runtime.pyimport('micropip');
-          try{await micropip.install('emoji')}finally{micropip.destroy()}
+          try{await micropip.install(new URL('emoji-2.14.1-py3-none-any.whl',PYODIDE_BASE_URL).href)}finally{micropip.destroy()}
         }
       }
       async function initialize(){
         send('status',{label:'Загрузка Python…'});importScripts(PYODIDE_URL);
-        runtime=await loadPyodide({indexURL:PYODIDE_URL.replace(/pyodide\\.js$/,''),stderr:text=>write(text,'error'),stdin:()=>''});
+        runtime=await loadPyodide({indexURL:PYODIDE_BASE_URL,stderr:text=>write(text,'error'),stdin:()=>''});
         runtime.setStdout({write:bytes=>{stdoutBuffer+=decoder.decode(bytes,{stream:true});let i;while((i=stdoutBuffer.indexOf('\\n'))!==-1){write(stdoutBuffer.slice(0,i));stdoutBuffer=stdoutBuffer.slice(i+1)}return bytes.length}});
       }
       async function run(source,files=[]){
