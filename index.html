@@ -305,8 +305,12 @@ class _Widget:
   _tk_widget_id+=1; self._id=_tk_widget_id; self.master,self.kw=master,kw; _tk_widgets[self._id]=self
  def pack(self,**kw): _event('widget',id=self._id,widget=type(self).__name__,**{key:value for key,value in self.kw.items() if not callable(value)}); return self
  grid=pack; place=pack
- def config(self,**kw): self.kw.update(kw)
+ def config(self,**kw):
+  self.kw.update(kw); _event('widget-config',id=self._id,options={key:value for key,value in kw.items() if not callable(value)})
  configure=config
+ def cget(self,key): return self.kw[key]
+ def __getitem__(self,key): return self.cget(key)
+ def __setitem__(self,key,value): self.config(**{key:value})
 class Tk(_Widget):
  def __init__(self,*a,**kw): super().__init__(None,**kw); _event('window',title='Python')
  def title(self,value): _event('title',value=str(value))
@@ -836,12 +840,15 @@ async def __pystudio_run(source):
     const graphical=guiEvents.length||interfaceStage?.hidden===false;
     if(!graphical){interfaceStage?.remove();return}
     const isPygame=guiEvents.some(event=>event.kind.startsWith('pygame-'));
-    const isWidgets=!isPygame&&guiEvents.some(event=>['window','title','widget'].includes(event.kind));
+    const isWidgets=!isPygame&&guiEvents.some(event=>['window','title','widget','widget-config'].includes(event.kind));
     if(isWidgets){
       interfaceStage.replaceChildren();const win=document.createElement('div');win.className='tk-window';
       const title=document.createElement('div');title.className='tk-title';title.textContent=guiEvents.findLast(event=>event.kind==='title')?.value||'Python';
       const body=document.createElement('div');body.className='tk-body';win.append(title,body);interfaceStage.append(win);
-      guiEvents.filter(event=>event.kind==='widget').forEach(event=>{
+      const widgetOptions=new Map();
+      guiEvents.filter(event=>event.kind==='widget-config').forEach(event=>widgetOptions.set(event.id,{...widgetOptions.get(event.id),...event.options}));
+      guiEvents.filter(event=>event.kind==='widget').forEach(original=>{
+        const event={...original,...widgetOptions.get(original.id)};
         let element;if(/Button/.test(event.widget)){element=document.createElement('button');element.textContent=event.text||'Кнопка';element.onclick=()=>worker?.postMessage({type:'tk-event',event:{type:'command',id:event.id}})}
         else if(/Entry|LineEdit/.test(event.widget)){element=document.createElement('input');element.value=event.value||'';if(event.show)element.type='password';element.addEventListener('input',()=>worker?.postMessage({type:'tk-event',event:{type:'value',id:event.id,value:element.value}}))}
         else{element=document.createElement('div');element.textContent=event.text||''} body.append(element);
@@ -1036,7 +1043,10 @@ async def __pystudio_run(source):
       if(message.type==='gui'){
         if(message.event.kind.startsWith('pygame-'))renderPygameEvent(message.event);
         else if(message.event.kind.startsWith('turtle-'))renderTurtleEvent(message.event);
-        else{guiEvents.push(message.event);if(message.event.kind==='mainloop')showInterface()}
+        else{
+          guiEvents.push(message.event);
+          if(message.event.kind==='mainloop'||(message.event.kind==='widget-config'&&guiEvents.some(item=>item.kind==='mainloop')))showInterface();
+        }
       }
       if(message.type==='input'){
         requestConsoleInput(message.prompt).then(value=>{if(instance===worker)instance.postMessage({type:'input',id:message.id,value})});
