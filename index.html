@@ -929,6 +929,31 @@ async def __pystudio_run(source):
       function send(type,data={}){postMessage({type,...data})}
       function write(text,kind='result'){if(text!==undefined&&text!==null&&String(text))send('output',{text:String(text),kind})}
       function flush(){if(stdoutBuffer){write(stdoutBuffer);stdoutBuffer=''}}
+      function allowWasmWithGenericMimeType(){
+        // WebAssembly streaming APIs reject otherwise valid .wasm files when a
+        // shared/static host serves them as application/octet-stream. Compile
+        // those responses from bytes, while retaining the faster streaming
+        // path on correctly configured hosts.
+        const wasmMime=/^application\\/wasm(?:;|$)/i;
+        if(WebAssembly.compileStreaming){
+          const compileStreaming=WebAssembly.compileStreaming.bind(WebAssembly);
+          WebAssembly.compileStreaming=async source=>{
+            const response=await source;
+            return wasmMime.test(response.headers.get('Content-Type')||'')
+              ? compileStreaming(response)
+              : WebAssembly.compile(await response.arrayBuffer());
+          };
+        }
+        if(WebAssembly.instantiateStreaming){
+          const instantiateStreaming=WebAssembly.instantiateStreaming.bind(WebAssembly);
+          WebAssembly.instantiateStreaming=async(source,imports)=>{
+            const response=await source;
+            return wasmMime.test(response.headers.get('Content-Type')||'')
+              ? instantiateStreaming(response,imports)
+              : WebAssembly.instantiate(await response.arrayBuffer(),imports);
+          };
+        }
+      }
       function sendMediaFiles(){
         const files=[];
         for(const name of runtime.FS.readdir('.')){
@@ -957,7 +982,7 @@ async def __pystudio_run(source):
         }
       }
       async function initialize(){
-        send('status',{label:'Загрузка Python…'});importScripts(PYODIDE_URL);
+        send('status',{label:'Загрузка Python…'});allowWasmWithGenericMimeType();importScripts(PYODIDE_URL);
         runtime=await loadPyodide({indexURL:PYODIDE_BASE_URL,stderr:text=>write(text,'error'),stdin:()=>''});
         runtime.setStdout({write:bytes=>{stdoutBuffer+=decoder.decode(bytes,{stream:true});let i;while((i=stdoutBuffer.indexOf('\\n'))!==-1){write(stdoutBuffer.slice(0,i));stdoutBuffer=stdoutBuffer.slice(i+1)}return bytes.length}});
       }
