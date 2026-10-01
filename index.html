@@ -181,10 +181,10 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  let interfaceStage,interfaceCanvas,interfaceContext,pygameWindow,pygameCaption,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
+  let interfaceStage,interfaceCanvas,interfaceContext,pygameWindow,pygameCaption,pygameCloseRequested=false,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
   let turtleCanvas,turtleContext,turtleQueue=Promise.resolve(),turtleSpeed=3,turtleAnimationId=0,turtleCursor={x:0,y:0,heading:0,visible:true};
   function prepareInterface(){
-    guiEvents=[];
+    guiEvents=[];pygameCloseRequested=false;
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
     interfaceCanvas=document.createElement('canvas');interfaceCanvas.width=640;interfaceCanvas.height=400;interfaceCanvas.id='canvas';
     interfaceStage.append(interfaceCanvas);out.append(interfaceStage);
@@ -197,7 +197,7 @@ print("Удвоенное значение:", number * 2)`;
     const titlebar=document.createElement('div');titlebar.className='pygame-titlebar';
     pygameCaption=document.createElement('span');pygameCaption.className='pygame-caption';pygameCaption.textContent='pygame window';
     const controls=document.createElement('div');controls.className='pygame-controls';
-    [['−','Свернуть окно','pygame-minimize'],['□','Развернуть окно','pygame-maximize'],['×','Закрыть окно','pygame-close']].forEach(([symbol,label,className])=>{const button=document.createElement('button');button.type='button';button.className=`pygame-control ${className}`;button.textContent=symbol;button.setAttribute('aria-label',label);button.title=label;if(className==='pygame-minimize')button.onclick=()=>{interfaceCanvas.hidden=!interfaceCanvas.hidden};if(className==='pygame-maximize')button.onclick=()=>{const maximized=pygameWindow.style.maxWidth==='100%';pygameWindow.style.maxWidth=maximized?'92%':'100%';pygameWindow.style.maxHeight=maximized?'92%':'100%';button.textContent=maximized?'□':'❐'};if(className==='pygame-close')button.onclick=()=>{if(!isRunning)return;button.disabled=true;stopPygameAudio();pygameWindow.hidden=true;worker?.postMessage({type:'quit'})};controls.append(button)});
+    [['−','Свернуть окно','pygame-minimize'],['□','Развернуть окно','pygame-maximize'],['×','Закрыть окно','pygame-close']].forEach(([symbol,label,className])=>{const button=document.createElement('button');button.type='button';button.className=`pygame-control ${className}`;button.textContent=symbol;button.setAttribute('aria-label',label);button.title=label;if(className==='pygame-minimize')button.onclick=()=>{interfaceCanvas.hidden=!interfaceCanvas.hidden};if(className==='pygame-maximize')button.onclick=()=>{const maximized=pygameWindow.style.maxWidth==='100%';pygameWindow.style.maxWidth=maximized?'92%':'100%';pygameWindow.style.maxHeight=maximized?'92%':'100%';button.textContent=maximized?'□':'❐'};if(className==='pygame-close')button.onclick=()=>{if(!isRunning)return;pygameCloseRequested=true;worker?.postMessage({type:'quit'})};controls.append(button)});
     titlebar.append(pygameCaption,controls);pygameWindow.append(titlebar,interfaceCanvas);interfaceStage.append(pygameWindow);
   }
   function stopPygameAudio(){activeAudio.forEach(audio=>{audio.pause();audio.currentTime=0});activeAudio=[]}
@@ -1077,7 +1077,7 @@ async def __pystudio_run(source):
         renderAssets();
       }
       if(message.type==='done'){
-        clearTimeout(loadTimer);await turtleQueue;if(instance!==worker)return;stopPygameAudio();showInterface();setState('done','Завершено');setRunning(false);instance.terminate();worker=undefined;
+        clearTimeout(loadTimer);await turtleQueue;if(instance!==worker)return;stopPygameAudio();if(pygameCloseRequested&&pygameWindow)pygameWindow.hidden=true;showInterface();setState('done','Завершено');setRunning(false);instance.terminate();worker=undefined;
       }
       if(message.type==='error'){
         clearTimeout(loadTimer);stopPygameAudio();interfaceStage?.remove();out.classList.remove('interface');writePython(formatPythonError({message:message.message}),'error');setState('','Ошибка');setRunning(false);instance.terminate();worker=undefined;
