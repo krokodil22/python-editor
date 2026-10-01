@@ -181,10 +181,10 @@ print("Удвоенное значение:", number * 2)`;
     const message=String(error?.message||error).trim();
     return message.startsWith('PythonError: ')?message.slice(13):message;
   }
-  let interfaceStage,interfaceCanvas,interfaceContext,pygameWindow,pygameCaption,pygameCloseRequested=false,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
+  let interfaceStage,interfaceCanvas,interfaceContext,pygameWindow,pygameCaption,pygameCloseRequested=false,pygameKeyboardActive=false,pygameFrame=[],pygameFrameId=0,guiEvents=[],activeAudio=[];
   let turtleCanvas,turtleContext,turtleQueue=Promise.resolve(),turtleSpeed=3,turtleAnimationId=0,turtleCursor={x:0,y:0,heading:0,visible:true};
   function prepareInterface(){
-    guiEvents=[];pygameCloseRequested=false;
+    guiEvents=[];pygameCloseRequested=false;pygameKeyboardActive=false;
     interfaceStage=document.createElement('div');interfaceStage.className='canvas-stage';interfaceStage.hidden=true;
     interfaceCanvas=document.createElement('canvas');interfaceCanvas.width=640;interfaceCanvas.height=400;interfaceCanvas.id='canvas';
     interfaceStage.append(interfaceCanvas);out.append(interfaceStage);
@@ -233,10 +233,10 @@ print("Удвоенное значение:", number * 2)`;
   function renderPygameEvent(event){
     if(!interfaceCanvas?.isConnected)return;
     if(event.kind==='pygame-display'){
-      preparePygameWindow();interfaceCanvas.width=event.size[0];interfaceCanvas.height=event.size[1];interfaceContext=interfaceCanvas.getContext('2d');pygameFrame=[];revealInterface();return;
+      pygameKeyboardActive=true;preparePygameWindow();interfaceCanvas.width=event.size[0];interfaceCanvas.height=event.size[1];interfaceContext=interfaceCanvas.getContext('2d');pygameFrame=[];revealInterface();return;
     }
     if(event.kind==='pygame-caption'){preparePygameWindow();pygameCaption.textContent=event.value||'pygame window';return}
-    if(event.kind==='pygame-quit'){stopPygameAudio();if(pygameWindow)pygameWindow.hidden=true;return}
+    if(event.kind==='pygame-quit'){pygameKeyboardActive=false;stopPygameAudio();if(pygameWindow)pygameWindow.hidden=true;return}
     if(event.kind==='pygame-sound'||event.kind==='pygame-music'){
       const filename=event.name.replaceAll('\\','/').split('/').pop();
       const asset=assets.find(item=>item.name===filename&&item.type.startsWith('audio/'));
@@ -930,7 +930,7 @@ async def __pystudio_run(source):
     layer.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();finish(definition.buttons[0][1])}if(event.key==='Tab'){event.preventDefault();const index=buttons.indexOf(document.activeElement),step=event.shiftKey?-1:1;buttons[(index+step+buttons.length)%buttons.length].focus()}});
   }
   function setRunning(value){
-    isRunning=value;runButton.classList.toggle('stop',value);
+    isRunning=value;if(!value)pygameKeyboardActive=false;runButton.classList.toggle('stop',value);
     runButton.textContent=value?'■ Стоп':'▶ Запустить';
   }
   function stop(reason='Выполнение остановлено пользователем.'){
@@ -1093,7 +1093,9 @@ async def __pystudio_run(source):
   }
   const pygameKeys={ArrowLeft:1073741904,ArrowRight:1073741903,ArrowUp:1073741906,ArrowDown:1073741905,Space:32,KeyR:114};
   function sendPygameKey(event,down){
-    const pygameKey=pygameKeys[event.code];if(!isRunning||!pygameKey)return;
+    const pygameKey=pygameKeys[event.code],target=event.target;
+    const isEditing=target instanceof Element&&Boolean(target.closest('input, textarea, select, [contenteditable="true"]'));
+    if(!isRunning||!pygameKeyboardActive||!pygameKey||isEditing)return;
     event.preventDefault();worker?.postMessage({type:'key',key:pygameKey,down});
   }
   runButton.onclick=run;
@@ -1104,7 +1106,7 @@ async def __pystudio_run(source):
   });
   document.addEventListener('keydown',event=>{if(event.key==='Escape')stop();else sendPygameKey(event,true)});
   document.addEventListener('keyup',event=>sendPygameKey(event,false));
-  window.addEventListener('blur',()=>{if(isRunning)Object.values(pygameKeys).forEach(key=>worker?.postMessage({type:'key',key,down:false}))});
+  window.addEventListener('blur',()=>{if(isRunning&&pygameKeyboardActive)Object.values(pygameKeys).forEach(key=>worker?.postMessage({type:'key',key,down:false}))});
   document.querySelector('#clear').onclick=clear;document.querySelector('#save').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([code.value],{type:'text/x-python'}));a.download='main.py';a.click();URL.revokeObjectURL(a.href)};
 })();
 </script></body></html>
